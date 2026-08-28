@@ -9,6 +9,10 @@ on:
         description: Existing v-prefixed release tag to retry npm publishing only
         required: false
         type: string
+      vscode_release_tag:
+        description: Existing v-prefixed release tag to retry VS Code publishing only
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -132,7 +136,7 @@ jobs:
           if-no-files-found: error
 
   publish-release:
-    if: startsWith(github.ref, 'refs/tags/v') && inputs.npm_release_tag == ''
+    if: startsWith(github.ref, 'refs/tags/v') && inputs.npm_release_tag == '' && inputs.vscode_release_tag == ''
     needs: [portable, wasi, native, native-macos]
     runs-on: ubuntu-24.04
     steps:
@@ -186,7 +190,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-vscode:
-    if: startsWith(github.ref, 'refs/tags/v') && inputs.npm_release_tag == ''
+    if: (startsWith(github.ref, 'refs/tags/v') && inputs.npm_release_tag == '') || inputs.vscode_release_tag != ''
     needs: [portable]
     runs-on: ubuntu-24.04
     environment: vscode-marketplace
@@ -199,8 +203,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: |
-          version="${GITHUB_REF_NAME#v}"
+          tag="${VSCODE_RELEASE_TAG:-$GITHUB_REF_NAME}"
+          case "$tag" in v*) ;; *) echo "Release tag must start with v" >&2; exit 2 ;; esac
+          version="${tag#v}"
           test "$version" = "$(node -p 'require("./editors/vscode/package.json").version')"
+        env:
+          VSCODE_RELEASE_TAG: ${{ inputs.vscode_release_tag }}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: portable
