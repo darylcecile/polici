@@ -103,6 +103,12 @@
     "tsx": "^4.20.5",
     "typescript": "^7.0.2"
   },
+  "optionalDependencies": {
+    "@polici/polici-darwin-arm64": "1.0.0",
+    "@polici/polici-darwin-x64": "1.0.0",
+    "@polici/polici-linux-arm64": "1.0.0",
+    "@polici/polici-linux-x64": "1.0.0"
+  },
   "engines": {
     "node": ">=20"
   },

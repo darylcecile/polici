@@ -4,10 +4,6 @@
 
 Native executables are target-specific; the ESM library is not. Maintainers use `pnpm run build:native-packages <os>-<cpu>` with Zig for Darwin arm64/x64 and glibc 2.36+ Linux arm64/x64 packages. Linux packages are not compatible with musl or older glibc. Each package declares exactly one `os` and `cpu`, and staging rejects a binary whose Mach-O/ELF header disagrees. The root package has no `os`/`cpu` restriction, so importing its ESM API works independently of native CLI availability.
 
-### macOS Signing
-
-`node --experimental-strip-types scripts/sign-macos.ts <binary>` is the real release hook. Set `MACOS_SIGN_IDENTITY` to a Developer ID Application identity; the script signs with hardened runtime and a trusted timestamp, then verifies the signature. Set `APPLE_ID`, `APPLE_TEAM_ID`, and `APPLE_APP_SPECIFIC_PASSWORD` to submit a temporary ZIP with `xcrun notarytool --wait`. Set `POLICI_REQUIRE_MACOS_SIGNING=1` in protected release jobs to fail rather than produce an unsigned or unnotarized artifact. Pull-request CI intentionally leaves the hook optional and reports that it was skipped; it never creates an ad-hoc signature or pretends notarization occurred.
-
 ```text
 Usage: polici <command> [options]
 ```
