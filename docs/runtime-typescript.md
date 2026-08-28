@@ -12,7 +12,7 @@ polici-plugin build plugin.ts
 
 The command is installed by `polici` and uses the scriptc version shipped with that Polici release. Plugin projects do not need a handwritten executable entrypoint or a separate global compiler installation.
 
-The builder imports default-exported `plugin.ts` and `runtime.ts`, validates their agreement, emits canonical `manifest.json`, bundles the SDK protocol adapter, generates the tiny executable entrypoint, and invokes scriptc. Hash the exact executable bytes into `polici.lock`; rebuilds that alter bytes require a reviewed lock update. Both `jsonl` and `length-prefixed` transports are implemented.
+The builder imports default-exported `plugin.ts` and `runtime.ts`, validates their agreement, optionally emits canonical `manifest.json`, bundles the SDK protocol adapter, generates the tiny executable entrypoint, and invokes scriptc. Use `--no-manifest` when `plugin.ts` is the path recorded by `polici.lock`. Hash the exact executable bytes into the lock; rebuilds that alter bytes require a reviewed lock update. Both `jsonl` and `length-prefixed` transports are implemented.
 
 Normal runtime source default-exports `defineRuntime(plugin, { resolvers })`. The adapter decodes tagged arguments to JavaScript primitives, converts return values back to wire values, validates lifecycle/framing, emits fresh continuation state, maps `RuntimeResolverError`, and replays awaited capability calls across fresh process exchanges. [`examples/runtime/typescript/runtime.ts`](../examples/runtime/typescript/runtime.ts) remains a low-level language-neutral protocol conformance fixture, not the recommended authoring pattern.
 

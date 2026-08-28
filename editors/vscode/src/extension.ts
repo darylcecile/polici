@@ -17,7 +17,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   const serverOptions: ServerOptions = { command, args };
   const lockfiles = vscode.workspace.createFileSystemWatcher("**/polici.lock{,.json}");
-  const manifests = vscode.workspace.createFileSystemWatcher("**/manifest.json");
+  const manifests = vscode.workspace.createFileSystemWatcher("**/{manifest.json,plugin.ts}");
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ scheme: "file", language: "polici" }],
     synchronize: {

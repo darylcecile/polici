@@ -79,11 +79,11 @@ Signature help recognizes recovered call syntax, reports one signature, computes
 The embedded `github@1` static manifest requires no file. Every other `using "name@major"` is resolved offline:
 
 1. Find exactly one matching entry in lockfile v2.
-2. Read candidate `manifest.json` files only, with a default 4 MiB limit.
+2. Read a path-locked `plugin.ts` contract or candidate `manifest.json`, with a default 4 MiB limit.
 3. Validate manifest v2, exact name/version/major/runtime metadata, and canonical manifest SHA-256 from the lock.
 4. Normalize only static types/exports/documentation into LSP-owned data.
 
-Runtime artifacts are never read or executed. A path lock source is searched relative to workspace/lock locations. Static manifests may also come from configured explicit paths or cache directories.
+Runtime artifacts are never read or executed. A path-locked `plugin.ts` contract is parsed through a closed declarative grammar without executing the module, generated in memory, and verified against the lock digest. Static JSON manifests may also come from configured explicit paths or cache directories.
 
 Workspace lock/manifests remain editor inputs, not enforcement trust anchors. They can influence diagnostics and displayed Markdown even though validation is bounded and runtime execution is prohibited. Review or isolate workspace metadata according to the editor's normal untrusted-workspace policy.
 
@@ -115,7 +115,7 @@ The extension contributes `.pol`, TextMate grammar, comments/brackets/folding/in
 }
 ```
 
-It watches `polici.lock`, legacy `polici.lock.json`, and `manifest.json`, then asks the server to republish. Build/develop it with the instructions in [`editors/README.md`](../editors/README.md).
+It watches `polici.lock`, legacy `polici.lock.json`, `plugin.ts`, and `manifest.json`, then asks the server to republish. Build/develop it with the instructions in [`editors/README.md`](../editors/README.md).
 
 Release packaging runs esbuild first and places the complete language-client dependency graph in the CommonJS `dist/extension.js` bundle, with only VS Code's host-provided `vscode` module external. `.vscodeignore` excludes sources, maps, lockfiles, and `node_modules`; CI creates and inspects the VSIX before release.
 

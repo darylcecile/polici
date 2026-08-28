@@ -1,6 +1,6 @@
 {
   "name": "polici",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Typed, deterministic CI policy engine with an extensible provider system",
   "keywords": [
     "ci",
@@ -25,7 +25,6 @@
     "scripts/polici-plugin.js",
     "schemas/*.json",
     "examples/**/*.pol",
-    "examples/**/*.json",
     "examples/**/*.md",
     "examples/**/*.ts",
     "examples/**/*.c",

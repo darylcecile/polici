@@ -8,7 +8,7 @@ Native executables are target-specific; the ESM library is not. Maintainers use 
 Usage: polici <command> [options]
 ```
 
-`--help`/`-h` prints help and `--version`/`-v` prints `polici 1.0.1`; neither requires a command. Argument/configuration errors return 2 and write an error plus help to stderr. If either flag is present, it takes precedence over normal required-command/file validation; help is handled before version when both are present.
+`--help`/`-h` prints help and `--version`/`-v` prints `polici 1.0.2`; neither requires a command. Argument/configuration errors return 2 and write an error plus help to stderr. If either flag is present, it takes precedence over normal required-command/file validation; help is handled before version when both are present.
 
 ## Commands
 
@@ -47,7 +47,7 @@ In pull-request mode, validation reads policy, lockfile, path manifests, and art
 ### `lock`
 
 ```console
-polici lock --file <policy> [--plugin <manifest.json> ...] [options]
+polici lock --file <policy> [--plugin <plugin.ts|manifest.json> ...] [options]
 ```
 
 Parses imports, resolves exact implemented sources, validates and hashes manifests/artifacts, compiles against those manifests, and atomically writes canonical `polici.lock/v2`. The output contains exactly one entry per distinct imported `(name, contractMajor)` and removes stale entries.
@@ -62,7 +62,7 @@ Implemented resolution is intentionally limited:
 `--check` is valid only with `lock`. It computes canonical current content and returns 0 only if the existing lockfile bytes match exactly:
 
 ```console
-polici lock --file ci.pol --plugin plugins/a/manifest.json --check
+polici lock --file ci.pol --plugin plugins/a/plugin.ts --check
 ```
 
 Without `--check`, the writer uses a private same-directory temporary file, mode `0600`, and atomic rename. With `--format json`, stdout is the canonical lock JSON, not a policy report; frozen mode prints the same JSON after successful verification. Locking a trusted event revision is rejected; create lock updates in a reviewed working tree.

@@ -112,6 +112,7 @@ export default defineRuntime(plugin, {
       resolve(pluginDirectory, "plugin.ts"),
       "--out",
       resolve(pluginDirectory, "runtime"),
+      "--no-manifest",
       "--scriptc",
       resolve(consumer, "node_modules/.bin/scriptc"),
     ],

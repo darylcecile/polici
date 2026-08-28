@@ -14,23 +14,23 @@ Create or intentionally update a lock:
 
 ```console
 ./dist/polici lock --file ci.pol
-./dist/polici lock --file ci.pol --plugin plugins/example/manifest.json
+./dist/polici lock --file ci.pol --plugin plugins/example/plugin.ts
 ```
 
 Verify the committed bytes in CI:
 
 ```console
-./dist/polici lock --file ci.pol --plugin plugins/example/manifest.json --check
+./dist/polici lock --file ci.pol --plugin plugins/example/plugin.ts --check
 ./dist/polici validate --file ci.pol
 ./dist/polici check --file ci.pol
 ```
 
-`lock` parses all imports, chooses exactly one implementation for each distinct `(name, contractMajor)`, reads the adjacent runtime artifact named by each local manifest, hashes exact bytes, validates compilation, sorts/canonicalizes content, and atomically replaces the target. Stale entries are removed. `--check` performs the same resolution but requires the existing file to equal canonical output byte-for-byte.
+`lock` parses all imports, chooses exactly one implementation for each distinct `(name, contractMajor)`, parses a declarative `plugin.ts` contract in memory without executing it (or accepts canonical JSON), reads the adjacent runtime artifact named by the contract, hashes exact bytes, validates compilation, sorts/canonicalizes content, and atomically replaces the target. Stale entries are removed. `--check` performs the same resolution but requires the existing file to equal canonical output byte-for-byte.
 
 Implemented CLI resolvers are:
 
 - `github@1`, built into `dist/polici` at locator `polici:provider:github@1.0.0` with deterministic embedded artifact bytes;
-- repeatable local `--plugin <manifest-path>` inputs, recorded as `source.kind: "path"` with a locator relative to the lockfile directory.
+- repeatable local `--plugin <plugin.ts>` or `<manifest.json>` inputs, recorded as `source.kind: "path"` with a locator relative to the lockfile directory. Source contracts are preferred and remove generated manifests from version control.
 
 There is no implemented package-range, registry, or URL fetch. `registry` and `url` are valid schema/library source identities for an embedding host that supplies exact verified bytes, but the native CLI rejects them while loading. It will not silently resolve an unsupported source during check.
 
@@ -49,7 +49,7 @@ The schema is [`plugin-lock.schema.json`](../schemas/plugin-lock.schema.json):
       "contractMajor": 1,
       "source": {
         "kind": "path",
-        "locator": "plugins/example/manifest.json"
+        "locator": "plugins/example/plugin.ts"
       },
       "manifest": {
         "algorithm": "sha256",
@@ -98,7 +98,7 @@ It also sorts each runtime capability list. `pluginLockfileJson` recursively sor
 
 During library compilation, each supplied `LockedPluginInput.lock` must occur exactly once in the validated lockfile with matching identity, source kind/locator, metadata, and digests. CLI loading additionally requires lock entries to match policy imports exactly: missing, additional, stale, or ambiguous entries are errors with advice to run `polici lock`.
 
-The CLI verifies all bytes before external artifact materialization. In pull-request mode, policy, lock, local manifests, and artifacts come from the exact event base commit while the evaluated repository snapshot comes from the exact event head commit.
+The CLI verifies all bytes before external artifact materialization. For source contracts, the generated in-memory canonical manifest must match the lock manifest digest. In pull-request mode, policy, lock, local contracts, and artifacts come from the exact event base commit while the evaluated repository snapshot comes from the exact event head commit.
 
 ## Library Hosts
 

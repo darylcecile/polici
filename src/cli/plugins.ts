@@ -37,6 +37,7 @@ import {
   CliWasiProcessResolverHost,
   type CliHardenedRuntimeSandbox,
 } from "./runtime.js";
+import { parsePluginDefinitionSource } from "../sdk/source.js";
 
 export const GITHUB_BUILTIN_LOCATOR = "polici:provider:github@1.0.0";
 
@@ -122,8 +123,8 @@ export function buildLockfile(
   for (const manifestInput of pluginManifestPaths) {
     const manifestAbsolutePath = path.resolve(repositoryRoot, manifestInput);
     const locator = relativeLocator(lockfileAbsolutePath, manifestAbsolutePath);
-    const manifestBytes = secureReadFile(manifestAbsolutePath, MAX_SOURCE_BYTES, "Plugin manifest");
-    const manifest = parsePluginManifest(decodeUtf8(manifestBytes, "Plugin manifest"));
+    const manifestBytes = secureReadFile(manifestAbsolutePath, MAX_SOURCE_BYTES, "Plugin contract");
+    const manifest = parseManifestInput(manifestAbsolutePath, manifestBytes);
     if (manifest.name === "github" && manifest.contractMajor === 1)
       throw new TypeError("github@1 is provided only by the built-in host implementation.");
     const artifactPath = artifactAbsolutePath(manifestAbsolutePath, manifest);
@@ -201,9 +202,22 @@ export function loadLockedPlugins(
     const locator = validatePathLocator(lock.source.locator);
     const lockDirectory = repositoryDirectory(lockfileRepositoryPath);
     const manifestPath = joinRepositoryPath(lockDirectory, locator);
-    const manifest = parsePluginManifest(
-      decodeUtf8(files.read(manifestPath, MAX_SOURCE_BYTES, "Plugin manifest"), "Plugin manifest"),
-    );
+    let manifest: PluginManifest;
+    if (isTypeScriptContract(manifestPath)) {
+      manifest = parsePluginDefinitionSource(
+        decodeUtf8(
+          files.read(manifestPath, MAX_SOURCE_BYTES, "Plugin contract"),
+          "Plugin contract",
+        ),
+      );
+    } else {
+      manifest = parsePluginManifest(
+        decodeUtf8(
+          files.read(manifestPath, MAX_SOURCE_BYTES, "Plugin manifest"),
+          "Plugin manifest",
+        ),
+      );
+    }
     const entrypoint = lock.runtime.entrypoint.slice(2);
     const artifactPath = joinRepositoryPath(repositoryDirectory(manifestPath), entrypoint);
     const artifact = files.read(artifactPath, MAX_ARTIFACT_BYTES, "Plugin artifact");
@@ -211,6 +225,20 @@ export function loadLockedPlugins(
     loaded.push({ lock, manifest, artifact });
   }
   return { lockfile, lockedPlugins: loaded };
+}
+
+function parseManifestInput(inputPath: string, bytes: Uint8Array): PluginManifest {
+  const text = decodeUtf8(
+    bytes,
+    isTypeScriptContract(inputPath) ? "Plugin contract" : "Plugin manifest",
+  );
+  return isTypeScriptContract(inputPath)
+    ? parsePluginDefinitionSource(text)
+    : parsePluginManifest(text);
+}
+
+function isTypeScriptContract(inputPath: string): boolean {
+  return /\.(?:ts|mts|cts)$/.test(inputPath);
 }
 
 export function preflightPlugins(

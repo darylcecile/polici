@@ -5,9 +5,9 @@
 Generate the static contract and native runtime together:
 
 ```console
-polici-plugin build examples/plugin/plugin.ts
+polici-plugin build examples/plugin/plugin.ts --no-manifest
 ```
 
-The command imports the default-exported contract and runtime definitions, emits canonical `manifest.json`, generates the protocol bootstrap internally, and compiles the artifact with scriptc. The generated manifest is static data and can be consumed by the compiler and editor without executing `plugin.ts` or `runtime.ts`.
+The command imports the default-exported contract and runtime definitions, generates the protocol bootstrap internally, and compiles the artifact with scriptc. `polici lock --plugin examples/plugin/plugin.ts` and the LSP parse the declarative contract in memory without executing it, so no generated manifest needs to be committed.
 
-`polici.lock` demonstrates the lock v2 shape using deterministic fixture digests. For a real policy, run `polici lock --file <policy> --plugin examples/plugin/manifest.json` after building.
+`polici.lock` demonstrates the lock v2 shape using deterministic fixture digests. For a real policy, run `polici lock --file <policy> --plugin examples/plugin/plugin.ts` after building.

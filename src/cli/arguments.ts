@@ -254,7 +254,7 @@ Common options:
   --version, -v                Show version
 
 Lock options:
-  --plugin <manifest-path>     Local plugin manifest; repeat for each plugin
+  --plugin <contract-path>     Local plugin.ts or generated manifest; repeat as needed
   --check                      Verify the lockfile is already canonical and current
 
 External runtime options for check:

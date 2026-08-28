@@ -50,6 +50,6 @@ execFileSync(
 );
 writeFileSync(
   resolve(output, "package.json"),
-  `${JSON.stringify({ name: "polici-native", version: "1.0.1", type: "module" })}\n`,
+  `${JSON.stringify({ name: "polici-native", version: "1.0.2", type: "module" })}\n`,
   { encoding: "utf8", mode: 0o600 },
 );

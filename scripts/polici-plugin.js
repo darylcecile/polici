@@ -16,7 +16,7 @@ if (command === "--help" || command === "-h" || command === undefined) {
   process.stdout.write(`Usage:
   polici-plugin manifest <plugin.ts> [--out manifest.json]
   polici-plugin build <plugin.ts> [--runtime runtime.ts] [--manifest manifest.json]
-                      [--out runtime] [--target scriptc-target] [--scriptc path]
+                      [--no-manifest] [--out runtime] [--target scriptc-target] [--scriptc path]
 `);
   process.exit(command === undefined ? 2 : 0);
 }
@@ -40,6 +40,7 @@ const manifestPath = resolve(
     ? (options.out ?? resolve(directory, "manifest.json"))
     : (options.manifest ?? resolve(directory, "manifest.json")),
 );
+const emitManifest = command === "manifest" || options.noManifest !== true;
 if (command === "manifest") {
   writeFileSync(manifestPath, pluginManifestJson(validation.value));
   process.stdout.write(`${manifestPath}\n`);
@@ -96,7 +97,7 @@ if (!emittedValidation.ok)
   fail(
     `Generated manifest is invalid: ${emittedValidation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`,
   );
-writeFileSync(manifestPath, pluginManifestJson(emittedValidation.value));
+if (emitManifest) writeFileSync(manifestPath, pluginManifestJson(emittedValidation.value));
 const temporary = mkdtempSync(resolve(directory, ".polici-plugin-"));
 const entrypoint = resolve(temporary, "entry.ts");
 try {
@@ -163,12 +164,16 @@ try {
 } finally {
   rmSync(temporary, { recursive: true, force: true });
 }
-process.stdout.write(`${manifestPath}\n${output}\n`);
+process.stdout.write(`${emitManifest ? `${manifestPath}\n` : ""}${output}\n`);
 
 function parseOptions(values) {
   const result = {};
   for (let index = 0; index < values.length; index += 1) {
     const key = values[index];
+    if (key === "--no-manifest") {
+      result.noManifest = true;
+      continue;
+    }
     if (!["--out", "--manifest", "--runtime", "--target", "--scriptc"].includes(key))
       fail(`Unknown option ${JSON.stringify(key)}.`);
     const value = values[++index];

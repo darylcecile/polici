@@ -13,6 +13,7 @@ import {
   type PluginLockfile,
 } from "../plugin/lockfile.js";
 import { validatePluginManifest, type PluginManifest } from "../plugin/manifest.js";
+import { parsePluginDefinitionSource } from "../sdk/source.js";
 import { githubManifest, githubStaticPlugin } from "./github.ts";
 import { normalizePluginManifest, type StaticPlugin } from "./metadata.ts";
 import { decodeUtf8 } from "./utf8.ts";
@@ -301,7 +302,7 @@ export class StaticManifestResolver {
     let sawDigestMismatch = false;
     let lastInvalid: string | undefined;
     for (const path of candidates) {
-      if (!path.endsWith(".json") || !existsSync(path)) continue;
+      if (!/\.(?:json|ts|mts|cts)$/.test(path) || !existsSync(path)) continue;
       const loaded = readBounded(path, maximum);
       if (loaded.text === undefined) {
         lastInvalid = `${path}: ${loaded.error ?? "cannot read file"}`;
@@ -309,7 +310,9 @@ export class StaticManifestResolver {
       }
       let value: unknown;
       try {
-        value = JSON.parse(loaded.text) as unknown;
+        value = path.endsWith(".json")
+          ? (JSON.parse(loaded.text) as unknown)
+          : parsePluginDefinitionSource(loaded.text);
       } catch (error) {
         lastInvalid = `${path}: ${error instanceof Error ? error.message : String(error)}`;
         continue;
@@ -374,7 +377,7 @@ export class StaticManifestResolver {
         const roots = isAbsolute(base) ? [""] : unique([root, dirname(lockPath)]);
         for (const candidateRoot of roots) {
           const path = isAbsolute(base) ? base : resolve(candidateRoot, base);
-          result.push(path.endsWith(".json") ? path : resolve(path, "manifest.json"));
+          result.push(/\.(?:json|ts|mts|cts)$/.test(path) ? path : resolve(path, "manifest.json"));
         }
       }
     }

@@ -544,6 +544,45 @@ test("external path plugin manifest digest changes fail closed", async () => {
   }
 });
 
+test("source-authored plugin contracts lock and validate without manifest.json", async () => {
+  const root = repository(
+    'using "source@1" as Source\npolicy "p" { rule "r" { require Source.healthy } }\n',
+  );
+  const pluginDirectory = resolve(root, "plugins/source");
+  mkdirSync(pluginDirectory, { recursive: true });
+  writeFileSync(
+    resolve(pluginDirectory, "plugin.ts"),
+    `import { definePlugin, type } from "polici/plugin-sdk";
+     export default definePlugin({
+       name: "source", version: "1.0.0", policiApi: 1, contractMajor: 1,
+       exports: { healthy: type.resource(type.boolean(), { resolve: "healthy" }) },
+       runtime: { kind: "typescript", entrypoint: "./runtime.ts" },
+     });\n`,
+  );
+  writeFileSync(resolve(pluginDirectory, "runtime"), "artifact");
+  const locked = await invoke([
+    "lock",
+    "--repository",
+    root,
+    "--file",
+    "ci.pol",
+    "--plugin",
+    "plugins/source/plugin.ts",
+  ]);
+  assert.equal(locked.exitCode, 0, locked.stderr);
+  const lock = JSON.parse(readFileSync(resolve(root, "polici.lock"), "utf8"));
+  assert.equal(lock.plugins[0].source.locator, "plugins/source/plugin.ts");
+  const validated = await invoke(["validate", "--repository", root, "--file", "ci.pol"]);
+  assert.equal(validated.exitCode, 0, validated.stderr);
+  writeFileSync(
+    resolve(pluginDirectory, "plugin.ts"),
+    readFileSync(resolve(pluginDirectory, "plugin.ts"), "utf8").replace("1.0.0", "1.0.1"),
+  );
+  const changed = await invoke(["validate", "--repository", root, "--file", "ci.pol"]);
+  assert.equal(changed.exitCode, 2);
+  assert.match(changed.stderr, /version|integrity|manifest/i);
+});
+
 test("lock creates a deterministic integrity-bound github built-in entry", async () => {
   const root = repository(
     'using "github@1" as Git\npolicy "repository" { rule "always" { require true } }\n',

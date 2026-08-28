@@ -39,7 +39,7 @@ import {
 import { operationalDiagnostic, renderHumanReport, validationResult } from "./report.js";
 import { nodeProcessRunner, type CliProcessRunner } from "./process.js";
 
-export const CLI_VERSION = "1.0.1";
+export const CLI_VERSION = "1.0.2";
 
 export interface CliEnvironment {
   readonly [name: string]: string | undefined;

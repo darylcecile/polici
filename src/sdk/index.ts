@@ -27,6 +27,7 @@ export {
   type RuntimeValue,
 } from "./runtime.js";
 export { wire, type WireValue } from "../plugin/wire.js";
+export { parsePluginDefinitionSource } from "./source.js";
 export type {
   Documentation,
   NamedTypeDefinition,

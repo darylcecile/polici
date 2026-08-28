@@ -10,6 +10,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { canonicalPluginManifestSha256 } from "../plugin/lockfile.js";
+import { parsePluginDefinitionSource } from "../sdk/source.js";
 import type { PluginManifest } from "../plugin/manifest.js";
 import { encodeLspMessage, LspFramer } from "./framing.ts";
 import { LanguageServerSession, offsetAt } from "./server.ts";
@@ -309,6 +310,34 @@ test("locked path manifests are static-only and never execute runtime artifacts"
     open(session, uri, 'using "safe@1" as Safe\npolicy "p" { rule "r" { require Safe.lookup() } }');
     assert.deepEqual(diagnostics(messages), []);
     assert.throws(() => readFileSync(sentinel));
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("locked TypeScript contracts generate LSP metadata in memory without manifest.json", () => {
+  const directory = mkdtempSync(join(tmpdir(), "polici-lsp-contract-"));
+  try {
+    const pluginDirectory = join(directory, "plugins/safe");
+    mkdirSync(pluginDirectory, { recursive: true });
+    const source = `import { definePlugin, type } from "polici/plugin-sdk";
+      export default definePlugin({
+        name: "safe", version: "1.0.0", policiApi: 1, contractMajor: 1,
+        exports: {
+          lookup: type.function({ parameters: {}, returns: type.boolean(), resolve: "lookup" }),
+        },
+        runtime: { kind: "typescript", entrypoint: "./runtime-do-not-run" },
+      });`;
+    writeFileSync(join(pluginDirectory, "plugin.ts"), source);
+    const manifest = parsePluginDefinitionSource(source);
+    const sourceLock = lock(manifest, canonicalPluginManifestSha256(manifest).value);
+    sourceLock.plugins[0]!.source = { kind: "path", locator: "plugins/safe/plugin.ts" };
+    writeFileSync(join(directory, "polici.lock"), JSON.stringify(sourceLock));
+    const uri = `file://${directory}/policy.pol`;
+    const { session, messages } = harness();
+    initialize(session, `file://${directory}`);
+    open(session, uri, 'using "safe@1" as Safe\npolicy "p" { rule "r" { require Safe.lookup() } }');
+    assert.deepEqual(diagnostics(messages), []);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

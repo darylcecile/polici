@@ -30,7 +30,7 @@ The npm entry `polici/plugin-sdk` exports `definePlugin`, `pluginManifestJson`, 
 Install Polici as a development dependency so contract types, runtime types, the builder, and its pinned scriptc compiler stay versioned together:
 
 ```console
-npm install --save-dev polici@1.0.1
+npm install --save-dev polici@1.0.2
 ```
 
 ```ts
@@ -99,7 +99,9 @@ export default defineRuntime(plugin, {
 });
 ```
 
-`defineRuntime` derives the runtime name, version, transport, capabilities, resolver names, and resolver argument types from the plugin contract. `polici-plugin build plugin.ts` validates both default exports, checks every declared resolver exists, emits canonical `manifest.json`, generates the protocol entrypoint internally, bundles the adapter, and invokes scriptc. Normal plugin code does not parse protocol messages, tag primitive values, or manage continuations.
+`defineRuntime` derives the runtime name, version, transport, capabilities, resolver names, and resolver argument types from the plugin contract. `polici-plugin build plugin.ts` validates both default exports, checks every declared resolver exists, optionally emits canonical `manifest.json`, generates the protocol entrypoint internally, bundles the adapter, and invokes scriptc. Use `--no-manifest` when the repository consumes `plugin.ts` directly. Normal plugin code does not parse protocol messages, tag primitive values, or manage continuations.
+
+`polici lock --plugin plugins/example/plugin.ts` parses the declarative contract without executing it and records that source path in `polici.lock`. Later check, validate, and LSP operations regenerate the contract in memory and verify its canonical digest. The supported static subset is `export default definePlugin({...})`, imports from `polici/plugin-sdk`, JSON literals, `core.*` references, and `type.*` calls. Variables, spreads, computed properties, templates, arbitrary calls, and dynamic expressions are rejected.
 
 The full example is [`examples/plugin/plugin.ts`](../examples/plugin/plugin.ts) with [`examples/plugin/runtime.ts`](../examples/plugin/runtime.ts).
 

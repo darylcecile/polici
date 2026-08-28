@@ -17,6 +17,7 @@ import { evaluatePolicy } from "../engine/evaluate.ts";
 import { definePlugin, pluginManifestJson } from "../sdk/define.js";
 import { type } from "../sdk/builders.js";
 import { defineRuntime, handleRuntimeMessage, RuntimeResolverError } from "../sdk/runtime.js";
+import { parsePluginDefinitionSource } from "../sdk/source.js";
 import {
   assertLockedPluginArtifact,
   canonicalPluginManifestSha256,
@@ -93,6 +94,61 @@ test("TypeScript authoring normalizes issue-style parameter objects and source e
     returns: { kind: "boolean" },
     resolve: "changes",
   });
+});
+
+test("plugin contracts parse as static TypeScript data without executing expressions", () => {
+  const manifest = parsePluginDefinitionSource(`
+    import { core, definePlugin, type } from "polici/plugin-sdk";
+    export default definePlugin({
+      name: "example", version: "1.2.3", policiApi: 1, contractMajor: 1,
+      types: {
+        User: type.entity({
+          identity: "id",
+          fields: {
+            id: type.id("example:user"),
+            login: type.string(),
+            groups: type.set(type.string(), { resolve: "user.groups" }),
+          },
+          methods: {
+            active: type.method({ parameters: {}, returns: type.boolean(), resolve: "user.active" }),
+          },
+        }),
+      },
+      exports: {
+        user: type.function({
+          parameters: { login: type.string(), pattern: type.glob({ default: "**/*" }) },
+          returns: type.ref("User"), resolve: "user",
+        }),
+        health: type.resource(core.Check, { resolve: "health" }),
+      },
+      runtime: { kind: "typescript", entrypoint: "./runtime.ts" },
+    });
+  `);
+  assert.equal(manifest.runtime.entrypoint, "./runtime");
+  assert.equal(manifest.types.User?.fields.groups?.kind, "set");
+  assert.deepEqual(manifest.exports.user?.parameters[1], {
+    name: "pattern",
+    type: { kind: "glob" },
+    default: "**/*",
+  });
+  assert.throws(
+    () =>
+      parsePluginDefinitionSource(
+        'import { definePlugin } from "polici/plugin-sdk"; const value = 1; export default definePlugin(value);',
+      ),
+    /unsupported token "="/,
+  );
+  assert.throws(
+    () =>
+      parsePluginDefinitionSource(
+        'import { definePlugin } from "polici/plugin-sdk"; export default definePlugin({ name: process.env.NAME });',
+      ),
+    /unsupported reference process.env.NAME/,
+  );
+  assert.throws(
+    () => parsePluginDefinitionSource('import plugin from "./runtime.ts"; export default plugin;'),
+    /may only reference/,
+  );
 });
 
 test("default-exportable runtimes adapt ordinary resolvers to resumable protocol messages", async () => {
