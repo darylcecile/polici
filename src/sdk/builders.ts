@@ -30,12 +30,20 @@ export interface ResourceOptions extends Documentation {
 }
 
 export interface FunctionOptions extends Documentation {
-  readonly parameters?: readonly ParameterDefinition[];
+  readonly parameters?:
+    | readonly ParameterDefinition[]
+    | Readonly<Record<string, TypeExpression | ParameterInput>>;
   readonly returns: TypeExpression;
   readonly resolve: string;
 }
 
 export type MethodOptions = FunctionOptions;
+
+export interface ParameterInput extends Documentation {
+  readonly type: TypeExpression;
+  readonly optional?: boolean;
+  readonly default?: JsonValue;
+}
 
 class TypeBuilders {
   string(options?: Omit<Options<StringType>, keyof Documentation> & Documentation): StringType {
@@ -104,11 +112,33 @@ class TypeBuilders {
     return { ...options, kind: "resource", type: resourceType };
   }
   function(options: FunctionOptions): FunctionExport {
-    return { ...options, kind: "function", parameters: [...(options.parameters ?? [])] };
+    return { ...options, kind: "function", parameters: normalizeParameters(options.parameters) };
   }
   method(options: MethodOptions): MethodDefinition {
-    return { ...options, parameters: [...(options.parameters ?? [])] };
+    return { ...options, parameters: normalizeParameters(options.parameters) };
   }
+}
+
+function normalizeParameters(
+  parameters: FunctionOptions["parameters"],
+): readonly ParameterDefinition[] {
+  if (parameters === undefined) return [];
+  if (Array.isArray(parameters)) return [...parameters];
+  return Object.entries(parameters).map(([name, value]) => {
+    if (!("kind" in value)) return { ...value, name };
+    const type = value as TypeExpression;
+    const defaultValue = type.kind === "glob" ? type.default : undefined;
+    let parameterType: TypeExpression = type;
+    if (type.kind === "glob" && type.default !== undefined) {
+      const { default: _default, ...withoutDefault } = type;
+      parameterType = withoutDefault;
+    }
+    return {
+      name,
+      type: parameterType,
+      ...(defaultValue === undefined ? {} : { default: defaultValue }),
+    };
+  });
 }
 
 export const type = new TypeBuilders();

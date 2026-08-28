@@ -1,8 +1,6 @@
 {
   "contractMajor": 1,
-  "documentation": {
-    "summary": "Example static provider contract."
-  },
+  "documentation": { "summary": "Example static provider contract." },
   "exports": {
     "health": {
       "kind": "resource",
@@ -31,11 +29,7 @@
   "types": {
     "User": {
       "fields": {
-        "groups": {
-          "items": { "kind": "string" },
-          "kind": "set",
-          "resolve": "user.groups"
-        },
+        "groups": { "items": { "kind": "string" }, "kind": "set", "resolve": "user.groups" },
         "id": { "kind": "id", "namespace": "example:user" },
         "login": { "kind": "string" }
       },

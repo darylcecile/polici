@@ -16,6 +16,7 @@ import { compilePolicy } from "../engine/compile.ts";
 import { evaluatePolicy } from "../engine/evaluate.ts";
 import { definePlugin, pluginManifestJson } from "../sdk/define.js";
 import { type } from "../sdk/builders.js";
+import { defineRuntime, handleRuntimeMessage, RuntimeResolverError } from "../sdk/runtime.js";
 import {
   assertLockedPluginArtifact,
   canonicalPluginManifestSha256,
@@ -69,6 +70,143 @@ function provider(): Readonly<PluginManifest> {
     runtime: { kind: "typescript", entrypoint: "./audit-runtime" },
   });
 }
+
+test("TypeScript authoring normalizes issue-style parameter objects and source entrypoints", () => {
+  const manifest = definePlugin({
+    name: "example",
+    version: "1.0.0",
+    policiApi: 1,
+    contractMajor: 1,
+    exports: {
+      changes: type.function({
+        parameters: { pattern: type.glob({ default: "**/*" }) },
+        returns: type.boolean(),
+        resolve: "changes",
+      }),
+    },
+    runtime: { kind: "typescript", entrypoint: "./runtime.ts" },
+  });
+  assert.equal(manifest.runtime.entrypoint, "./runtime");
+  assert.deepEqual(manifest.exports.changes, {
+    kind: "function",
+    parameters: [{ name: "pattern", type: { kind: "glob" }, default: "**/*" }],
+    returns: { kind: "boolean" },
+    resolve: "changes",
+  });
+});
+
+test("default-exportable runtimes adapt ordinary resolvers to resumable protocol messages", async () => {
+  const runtime = defineRuntime({
+    name: "ownership",
+    version: "1.0.1",
+    resolvers: {
+      approved(_context, { owner }) {
+        return owner === "platform";
+      },
+      failure() {
+        throw new RuntimeResolverError("OWNER_UNKNOWN", "resolver", "Unknown owner");
+      },
+    },
+  });
+  const limits = {
+    maxFrameBytes: 1024,
+    maxMessageBytes: 1024,
+    maxOutputBytes: 4096,
+    maxLogBytes: 1024,
+    maxContinuationBytes: 4096,
+    maxCapabilityCalls: 8,
+  };
+  const initialized = await handleRuntimeMessage(runtime, {
+    protocol: RUNTIME_PROTOCOL,
+    type: "initialize",
+    id: "initialize-1",
+    host: { name: "polici", version: "1" },
+    plugin: { name: "ownership", version: "1.0.1" },
+    capabilities: [],
+    limits,
+  });
+  assert.equal(initialized.type, "initialized");
+  if (initialized.type !== "initialized") return;
+  const first = await handleRuntimeMessage(runtime, {
+    protocol: RUNTIME_PROTOCOL,
+    type: "call",
+    id: "call-1",
+    resolver: "approved",
+    arguments: { owner: wire.string("platform") },
+    continuation: initialized.continuation,
+    deadlineUnixMs: Date.now() + 30_000,
+  });
+  assert.equal(first.type, "result");
+  if (first.type !== "result") return;
+  assert.deepEqual(first.value, wire.boolean(true));
+  assert.notEqual(first.continuation, initialized.continuation);
+  const failed = await handleRuntimeMessage(runtime, {
+    protocol: RUNTIME_PROTOCOL,
+    type: "call",
+    id: "call-2",
+    resolver: "failure",
+    arguments: {},
+    continuation: first.continuation,
+    deadlineUnixMs: Date.now() + 30_000,
+  });
+  assert.equal(failed.type, "error");
+  if (failed.type === "error") assert.equal(failed.error.code, "OWNER_UNKNOWN");
+});
+
+test("runtime capability helpers replay awaited calls across process exchanges", async () => {
+  const runtime = defineRuntime({
+    name: "example",
+    version: "1.0.0",
+    capabilities: ["example:data"],
+    resolvers: {
+      async lookup(context, { key }) {
+        return context.capability("example:data").call("read", { key });
+      },
+    },
+  });
+  const limits = {
+    maxFrameBytes: 4096,
+    maxMessageBytes: 4096,
+    maxOutputBytes: 8192,
+    maxLogBytes: 1024,
+    maxContinuationBytes: 8192,
+    maxCapabilityCalls: 8,
+  };
+  const initialized = await handleRuntimeMessage(runtime, {
+    protocol: RUNTIME_PROTOCOL,
+    type: "initialize",
+    id: "initialize",
+    host: { name: "polici", version: "1" },
+    plugin: { name: "example", version: "1.0.0" },
+    capabilities: [{ name: "example:data", operations: ["read"] }],
+    limits,
+  });
+  assert.equal(initialized.type, "initialized");
+  if (initialized.type !== "initialized") return;
+  const pending = await handleRuntimeMessage(runtime, {
+    protocol: RUNTIME_PROTOCOL,
+    type: "call",
+    id: "call",
+    resolver: "lookup",
+    arguments: { key: wire.string("owner") },
+    continuation: initialized.continuation,
+    deadlineUnixMs: Date.now() + 30_000,
+  });
+  assert.equal(pending.type, "capability-call");
+  if (pending.type !== "capability-call") return;
+  assert.deepEqual(pending.arguments, { key: wire.string("owner") });
+  const result = await handleRuntimeMessage(runtime, {
+    protocol: RUNTIME_PROTOCOL,
+    type: "capability-result",
+    id: "call",
+    requestId: pending.requestId,
+    sequence: pending.sequence,
+    continuation: pending.continuation,
+    result: wire.string("platform"),
+  });
+  assert.equal(result.type, "result");
+  if (result.type === "result") assert.deepEqual(result.value, wire.string("platform"));
+});
 
 test("locked compilation verifies exact source, manifest, artifact, and contract major", () => {
   const manifest = provider();

@@ -1,6 +1,6 @@
 {
   "name": "polici",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Typed, deterministic CI policy engine with an extensible provider system",
   "keywords": [
     "ci",
@@ -15,12 +15,14 @@
     "url": "git+https://github.com/darylcecile/polici.git"
   },
   "bin": {
-    "polici": "scripts/polici.js"
+    "polici": "scripts/polici.js",
+    "polici-plugin": "scripts/polici-plugin.js"
   },
   "files": [
     "lib/**/*.js",
     "lib/**/*.d.ts",
     "scripts/polici.js",
+    "scripts/polici-plugin.js",
     "schemas/*.json",
     "examples/**/*.pol",
     "examples/**/*.json",
@@ -65,6 +67,10 @@
       "types": "./lib/src/sdk/index.d.ts",
       "import": "./lib/src/sdk/index.js"
     },
+    "./runtime-sdk": {
+      "types": "./lib/src/sdk/runtime.d.ts",
+      "import": "./lib/src/sdk/runtime.js"
+    },
     "./github": {
       "types": "./lib/providers/github/index.d.ts",
       "import": "./lib/providers/github/index.js"
@@ -96,11 +102,14 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check"
   },
+  "dependencies": {
+    "esbuild": "0.25.10",
+    "scriptc": "0.0.33"
+  },
   "devDependencies": {
     "oxfmt": "^0.64.0",
     "oxlint": "^1.79.0",
     "oxlint-tsgolint": "^7.0.2001",
-    "scriptc": "0.0.33",
     "tsx": "^4.20.5",
     "typescript": "^7.0.2"
   },

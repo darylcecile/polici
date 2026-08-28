@@ -1,7 +1,7 @@
 {
   "name": "polici-language",
   "displayName": "Polici Language",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Language Server Protocol support, syntax highlighting, and snippets for Polici policy files.",
   "categories": [
     "Linters",

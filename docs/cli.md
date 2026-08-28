@@ -8,7 +8,7 @@ Native executables are target-specific; the ESM library is not. Maintainers use 
 Usage: polici <command> [options]
 ```
 
-`--help`/`-h` prints help and `--version`/`-v` prints `polici 1.0.0`; neither requires a command. Argument/configuration errors return 2 and write an error plus help to stderr. If either flag is present, it takes precedence over normal required-command/file validation; help is handled before version when both are present.
+`--help`/`-h` prints help and `--version`/`-v` prints `polici 1.0.1`; neither requires a command. Argument/configuration errors return 2 and write an error plus help to stderr. If either flag is present, it takes precedence over normal required-command/file validation; help is handled before version when both are present.
 
 ## Commands
 

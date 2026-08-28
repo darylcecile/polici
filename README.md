@@ -55,6 +55,7 @@ policies / rules / requirements / evidence / diagnostics / exit code
 - **Core model:** immutable files, snapshots, materialized before/after changes, checks, strict JSON provenance, canonical collections, and SHA-256.
 - **Language:** lossless tokens, parser recovery, lexical scopes, manifest-backed static types, lazy bindings, short-circuit operators, and bounded evaluation.
 - **Plugin boundary:** `polici.plugin/v2` describes types, exports, resolver names, permissions, executable kind, transport, and documentation without loading runtime code.
+- **TypeScript plugin SDK:** default-export `definePlugin(...)` contracts with `type.*`/`core.*` helpers and default-export `defineRuntime(plugin, { resolvers })` implementations; `polici-plugin build` emits canonical JSON and compiles the generated adapter with scriptc.
 - **Integrity boundary:** `polici.lock/v2` binds every import to exact manifest and artifact digests. The CLI resolves local `--plugin` manifests and its embedded `github@1`; it does not fetch registry or URL sources.
 - **Runtime boundary:** native TypeScript-authored executables and WASI commands share language-neutral `polici.runtime/v1`. Logical sessions are resumed through fresh continuation tokens across process exchanges and support brokered capability callbacks over JSONL or four-byte big-endian length-prefixed framing.
 - **GitHub provider:** authentication stays in the host. Event coordinates, live PR identity, pagination, Git object hashes, before bytes, and the exact head snapshot are checked before evaluation.

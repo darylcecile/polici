@@ -38,7 +38,16 @@ export interface PluginDefinition {
   readonly documentation?: Documentation;
 }
 
-export function definePlugin(definition: PluginDefinition): Readonly<PluginManifest> {
+declare const pluginDefinitionType: unique symbol;
+
+export type DefinedPlugin<Definition extends PluginDefinition = PluginDefinition> =
+  Readonly<PluginManifest> & {
+    readonly [pluginDefinitionType]?: Definition;
+  };
+
+export function definePlugin<const Definition extends PluginDefinition>(
+  definition: Definition,
+): DefinedPlugin<Definition> {
   assertValid("Plugin definition", validateJsonValue(definition, "$definition"));
   const permissions = sortedUnique(definition.permissions ?? []);
   const manifest: PluginManifest = {
@@ -54,7 +63,7 @@ export function definePlugin(definition: PluginDefinition): Readonly<PluginManif
     runtime: {
       kind: definition.runtime.kind,
       protocol: definition.runtime.protocol ?? PLUGIN_RUNTIME_PROTOCOL_VERSION,
-      entrypoint: definition.runtime.entrypoint,
+      entrypoint: compiledEntrypoint(definition.runtime.kind, definition.runtime.entrypoint),
       transport: definition.runtime.transport ?? "jsonl",
       capabilities: sortedUnique(definition.runtime.capabilities ?? permissions),
     },
@@ -62,8 +71,10 @@ export function definePlugin(definition: PluginDefinition): Readonly<PluginManif
   };
   assertValid("Plugin manifest", validatePluginManifest(manifest));
   const canonical = canonicalizeJson(manifest as unknown as JsonValue) as unknown as PluginManifest;
-  return deepFreezeJson(canonical as unknown as JsonValue) as unknown as Readonly<PluginManifest>;
+  return deepFreezeJson(canonical as unknown as JsonValue) as unknown as DefinedPlugin<Definition>;
 }
+
+export default definePlugin;
 
 export function pluginManifestJson(manifest: PluginManifest): string {
   assertValid("Plugin manifest", validatePluginManifest(manifest));
@@ -72,4 +83,9 @@ export function pluginManifestJson(manifest: PluginManifest): string {
 
 function sortedUnique(values: readonly string[]): readonly string[] {
   return [...new Set(values)].sort();
+}
+
+function compiledEntrypoint(kind: PluginRuntimeKind, entrypoint: string): string {
+  if (kind !== "typescript") return entrypoint;
+  return entrypoint.replace(/\.(?:ts|tsx|mts|cts)$/, "");
 }

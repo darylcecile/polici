@@ -25,6 +25,16 @@ declare const process: {
   readonly env: Readonly<Record<string, string | undefined>>;
 };
 
+declare const Buffer: {
+  from(
+    value: string,
+    encoding: "base64" | "base64url" | "utf8",
+  ): Uint8Array & { toString(encoding: "base64" | "base64url" | "utf8"): string };
+  from(value: Uint8Array): Uint8Array & {
+    toString(encoding: "base64" | "base64url" | "utf8"): string;
+  };
+};
+
 declare module "node:fs" {
   export const constants: {
     readonly X_OK: number;

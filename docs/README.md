@@ -7,7 +7,7 @@ These documents describe the behavior implemented by this repository. Normative 
 | [Language](language.md)                      | Grammar, scopes, types, core values, globs, absence, and evaluation                     |
 | [CLI](cli.md)                                | Native executable, commands, options, snapshots, output, and exit codes                 |
 | [Library API](library-api.md)                | Engine, repository, resolver, runtime-host, and result APIs                             |
-| [Plugin SDK](plugin-sdk.md)                  | Static manifest v2, builders, validation, and compatibility                             |
+| [Plugin SDK](plugin-sdk.md)                  | Default-exported TypeScript contracts/runtimes, typed builders, and build tooling       |
 | [Lockfiles](lockfiles.md)                    | Lockfile v2, CLI resolution, canonicalization, digests, and CI workflow                 |
 | [Runtime protocol](runtime-protocol.md)      | Language-neutral resumable sessions, framing, wire values, capabilities, and limits     |
 | [TypeScript runtimes](runtime-typescript.md) | Native executable build, trust, sandbox, and process contract                           |

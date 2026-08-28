@@ -57,6 +57,12 @@ Compiles and then evaluates using one `CheckPolicyOptions` object. Policy failur
 
 ### `adaptPluginManifest(manifest)`
 
+### TypeScript plugin authoring
+
+`polici/plugin-sdk` is the contract-authoring API. A plugin source default-exports `definePlugin(...)` and uses `type.*` and `core.*` helpers. `polici/runtime-sdk` is the runtime-authoring API: runtime source default-exports `defineRuntime(plugin, { resolvers })`, with primitive resolver arguments inferred from the contract.
+
+`polici-plugin build plugin.ts` imports those authoring definitions, validates that all declared resolvers exist, emits canonical static `manifest.json`, generates the protocol bootstrap internally, and compiles the runtime using the scriptc version shipped with Polici. The lower-level `polici/plugin` export remains available for embedders and non-TypeScript protocol implementations.
+
 Converts a strict v2 plugin manifest to language-only static metadata. It maps `contractMajor` to import API version and flattens documentation without loading a runtime.
 
 ## Repository Model

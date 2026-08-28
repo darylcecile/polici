@@ -25,12 +25,18 @@ Changing or removing a type, field, export, identity namespace, resolver meaning
 
 ## SDK Authoring
 
-The SDK source entry is `src/sdk/index.ts` and exports `definePlugin`, `pluginManifestJson`, `type`, and `core`.
+The npm entry `polici/plugin-sdk` exports `definePlugin`, `pluginManifestJson`, `type`, and `core`. The TypeScript contract is the source of truth; `manifest.json` is generated static output.
+
+Install Polici as a development dependency so contract types, runtime types, the builder, and its pinned scriptc compiler stay versioned together:
+
+```console
+npm install --save-dev polici@1.0.1
+```
 
 ```ts
-import { core, definePlugin, type } from "../../src/sdk/index.js";
+import { core, definePlugin, type } from "polici/plugin-sdk";
 
-export const manifest = definePlugin({
+export default definePlugin({
   name: "example",
   version: "1.0.0",
   policiApi: 1,
@@ -54,7 +60,7 @@ export const manifest = definePlugin({
   },
   exports: {
     user: type.function({
-      parameters: [type.parameter("login", type.string())],
+      parameters: { login: type.string() },
       returns: type.ref("User"),
       resolve: "user",
     }),
@@ -63,14 +69,39 @@ export const manifest = definePlugin({
   permissions: ["example:users:read"],
   runtime: {
     kind: "typescript",
-    entrypoint: "./runtime",
+    entrypoint: "./runtime.ts",
   },
 });
 ```
 
-`definePlugin` fills empty maps/arrays, defaults protocol 1 and JSONL transport, defaults runtime capabilities to permissions, sorts and de-duplicates permissions/capabilities, validates, recursively canonicalizes, and deep-freezes the returned JSON-shaped manifest. `pluginManifestJson` validates and emits recursively canonical one-line JSON followed by one newline. `type.method` builds an entity method; methods are not valid on value types.
+`definePlugin` fills empty maps/arrays, defaults protocol 1 and JSONL transport, defaults runtime capabilities to permissions, sorts and de-duplicates permissions/capabilities, validates, recursively canonicalizes, and deep-freezes the returned JSON-shaped manifest. Object-shaped function/method parameters preserve declaration order and normalize to the manifest's language-neutral parameter array. A `type.glob({ default })` parameter moves that default onto the parameter during normalization. TypeScript entrypoints such as `./runtime.ts` normalize to the compiled `./runtime` path in generated static metadata. `pluginManifestJson` validates and emits recursively canonical one-line JSON followed by one newline. `type.method` builds an entity method; methods are not valid on value types.
 
-The full example is [`examples/plugin/manifest.ts`](../examples/plugin/manifest.ts).
+The runtime source binds back to the default-exported contract:
+
+```ts
+import { defineRuntime } from "polici/runtime-sdk";
+import plugin from "./plugin.ts";
+
+export default defineRuntime(plugin, {
+  resolvers: {
+    user(context, { login }) {
+      return context.value.entity(
+        "example:User",
+        { namespace: "example:user", value: login },
+        {
+          id: context.value.id("example:user", login),
+          login,
+          groups: new Set(),
+        },
+      );
+    },
+  },
+});
+```
+
+`defineRuntime` derives the runtime name, version, transport, capabilities, resolver names, and resolver argument types from the plugin contract. `polici-plugin build plugin.ts` validates both default exports, checks every declared resolver exists, emits canonical `manifest.json`, generates the protocol entrypoint internally, bundles the adapter, and invokes scriptc. Normal plugin code does not parse protocol messages, tag primitive values, or manage continuations.
+
+The full example is [`examples/plugin/plugin.ts`](../examples/plugin/plugin.ts) with [`examples/plugin/runtime.ts`](../examples/plugin/runtime.ts).
 
 ## Manifest Fields
 
@@ -86,7 +117,7 @@ The JSON Schema is [`schemas/plugin-manifest.schema.json`](../schemas/plugin-man
 | `runtime`       | Kind, protocol, safe package-relative entrypoint, transport, and unique capability list.                                 |
 | `documentation` | Optional summary, description, deprecation text, and unique examples.                                                    |
 
-Entrypoints MUST start with `./`, use `/`, contain no NUL, and have no empty, `.` or `..` segment. WASM entrypoints MUST end in `.wasm`. A TypeScript-kind manifest describes a precompiled executable; source suffixes `.ts`, `.tsx`, `.js`, `.mjs`, `.cjs`, `.mts`, or `.cts` are rejected. The `kind` records the authoring/runtime lane, not permission to execute source directly.
+Authored entrypoints MUST start with `./`, use `/`, contain no NUL, and have no empty, `.` or `..` segment. WASM entrypoints MUST end in `.wasm`. `definePlugin` accepts a TypeScript source suffix and normalizes it away; the emitted canonical manifest always describes the precompiled executable and rejects source suffixes. The `kind` records the authoring/runtime lane, not permission to execute source directly.
 
 `permissions` and `runtime.capabilities` MUST contain the same capability names. The evaluator requires the resolver host to advertise every manifest permission before any resolver call. A manifest permission is therefore a minimum host grant for the whole plugin, not a resolver-by-resolver dynamic request.
 

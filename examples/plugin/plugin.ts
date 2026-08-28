@@ -1,6 +1,6 @@
-import { core, definePlugin, type } from "../../src/sdk/index.js";
+import { core, definePlugin, type } from "polici/plugin-sdk";
 
-export const exampleManifest = definePlugin({
+export default definePlugin({
   name: "example",
   version: "1.0.0",
   policiApi: 1,
@@ -20,7 +20,7 @@ export const exampleManifest = definePlugin({
   },
   exports: {
     user: type.function({
-      parameters: [type.parameter("login", type.string())],
+      parameters: { login: type.string() },
       returns: type.ref("User"),
       resolve: "user",
     }),
@@ -29,7 +29,7 @@ export const exampleManifest = definePlugin({
   permissions: ["example:users:read"],
   runtime: {
     kind: "typescript",
-    entrypoint: "./runtime",
+    entrypoint: "./runtime.ts",
     transport: "jsonl",
   },
 });

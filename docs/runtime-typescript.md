@@ -1,18 +1,20 @@
 # TypeScript Runtime Author Guide
 
-A manifest runtime with `kind: "typescript"` denotes a TypeScript-authored runtime compiled to a native executable before Polici loads it. The v2 manifest rejects `.ts`, `.tsx`, `.js`, `.mjs`, `.cjs`, `.mts`, and `.cts` entrypoints. Polici does not execute provider source through Node.js or `tsx`.
+A plugin contract may author `runtime.entrypoint: "./runtime.ts"`; `definePlugin` normalizes it to the compiled `./runtime` artifact in canonical metadata. Polici never executes provider source during compilation, editor use, validation, or policy checks.
 
 ## Build
 
-The repository uses ScriptC:
+Use the packaged builder:
 
 ```console
-pnpm exec scriptc build examples/runtime/typescript/runtime.ts -o examples/runtime/typescript/runtime
+polici-plugin build plugin.ts
 ```
 
-Hash the exact executable bytes into `polici.lock`. A typical manifest uses `entrypoint: "./runtime"`; rebuilds that alter bytes require a reviewed lock update. Both `jsonl` and `length-prefixed` transports are implemented.
+The command is installed by `polici` and uses the scriptc version shipped with that Polici release. Plugin projects do not need a handwritten executable entrypoint or a separate global compiler installation.
 
-[`examples/runtime/typescript/runtime.ts`](../examples/runtime/typescript/runtime.ts) is a standalone language-neutral-contract fixture. It supports `--length-prefixed`, fresh encoded continuation state, repeated logical calls, and interactive broker callbacks.
+The builder imports default-exported `plugin.ts` and `runtime.ts`, validates their agreement, emits canonical `manifest.json`, bundles the SDK protocol adapter, generates the tiny executable entrypoint, and invokes scriptc. Hash the exact executable bytes into `polici.lock`; rebuilds that alter bytes require a reviewed lock update. Both `jsonl` and `length-prefixed` transports are implemented.
+
+Normal runtime source default-exports `defineRuntime(plugin, { resolvers })`. The adapter decodes tagged arguments to JavaScript primitives, converts return values back to wire values, validates lifecycle/framing, emits fresh continuation state, maps `RuntimeResolverError`, and replays awaited capability calls across fresh process exchanges. [`examples/runtime/typescript/runtime.ts`](../examples/runtime/typescript/runtime.ts) remains a low-level language-neutral protocol conformance fixture, not the recommended authoring pattern.
 
 ## Exchange Contract
 
