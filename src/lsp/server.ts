@@ -425,7 +425,7 @@ export class LanguageServerSession {
           workspaceFolders: { supported: true, changeNotifications: true },
         },
       },
-      serverInfo: { name: "polici", version: "1.0.2" },
+      serverInfo: { name: "polici", version: "1.0.3" },
     });
   }
 

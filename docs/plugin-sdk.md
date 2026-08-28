@@ -30,7 +30,7 @@ The npm entry `polici/plugin-sdk` exports `definePlugin`, `pluginManifestJson`, 
 Install Polici as a development dependency so contract types, runtime types, the builder, and its pinned scriptc compiler stay versioned together:
 
 ```console
-npm install --save-dev polici@1.0.2
+npm install --save-dev polici@1.0.3
 ```
 
 ```ts

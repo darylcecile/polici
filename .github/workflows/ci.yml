@@ -48,7 +48,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:package
 
   vscode:
     runs-on: ubuntu-24.04

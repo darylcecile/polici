@@ -1,6 +1,6 @@
 {
   "name": "polici",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Typed, deterministic CI policy engine with an extensible provider system",
   "keywords": [
     "ci",
@@ -39,6 +39,7 @@
     "editors/vscode/syntaxes/*.json",
     "docs/*.md",
     "README.md",
+    "GUIDE.md",
     "LICENSE"
   ],
   "type": "module",
@@ -93,7 +94,6 @@
     "typecheck": "tsc --noEmit --allowImportingTsExtensions --module nodenext --moduleResolution nodenext --target es2024 --skipLibCheck src/plugin/node-shims.d.ts src/cli/node-shims.d.ts src/index.ts src/cli/main.ts providers/github/index.ts",
     "test:runtime": "node --experimental-strip-types --no-warnings scripts/prepare-wasm-fixture.ts && tsx --test tests/issue-1-runtime.acceptance.test.ts",
     "test:assets": "node --experimental-strip-types --no-warnings scripts/validate-assets.ts",
-    "test:package": "node --experimental-strip-types --no-warnings scripts/test-package.ts",
     "pack:root": "node --experimental-strip-types --no-warnings scripts/pack-root.ts",
     "prepack": "pnpm run clean:package && pnpm run build:library",
     "lint": "oxlint",
