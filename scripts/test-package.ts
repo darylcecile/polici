@@ -6,18 +6,16 @@ import { resolve } from "node:path";
 
 const root = process.cwd();
 const packDirectory = mkdtempSync(resolve(tmpdir(), "polici-pack-"));
-execFileSync("pnpm", ["run", "prepack"], { cwd: root, stdio: "inherit" });
-const packOutput = JSON.parse(
-  execFileSync("pnpm", ["pack", "--json", "--pack-destination", packDirectory], {
-    cwd: root,
-    encoding: "utf8",
-    env: { ...process.env, npm_config_ignore_scripts: "true" },
-  }),
-) as
-  | { filename: string; files: { path: string }[] }
-  | { filename: string; files: { path: string }[] }[];
-const pack = Array.isArray(packOutput) ? packOutput[0]! : packOutput;
-const paths = pack.files.map((file) => file.path);
+execFileSync(
+  process.execPath,
+  ["--experimental-strip-types", "--no-warnings", "scripts/pack-root.ts", packDirectory],
+  { cwd: root, stdio: "inherit" },
+);
+const archive = resolve(packDirectory, "polici-1.0.0.tgz");
+const paths = execFileSync("tar", ["-tzf", archive], { encoding: "utf8" })
+  .trim()
+  .split("\n")
+  .map((path) => path.replace(/^package\//, ""));
 assert.ok(paths.includes("lib/src/index.js"));
 assert.ok(paths.includes("lib/src/index.d.ts"));
 assert.ok(paths.includes("scripts/polici.js"));
@@ -35,11 +33,20 @@ assert.ok(
 for (const schema of ["plugin-lock", "plugin-manifest", "policy-report", "runtime-protocol"]) {
   assert.ok(paths.includes(`schemas/${schema}.schema.json`));
 }
+const packedManifest = JSON.parse(
+  execFileSync("tar", ["-xOzf", archive, "package/package.json"], { encoding: "utf8" }),
+) as { optionalDependencies?: Record<string, string> };
+assert.deepEqual(packedManifest.optionalDependencies, {
+  "@polici/polici-darwin-arm64": "1.0.0",
+  "@polici/polici-darwin-x64": "1.0.0",
+  "@polici/polici-linux-arm64": "1.0.0",
+  "@polici/polici-linux-x64": "1.0.0",
+});
 
 const consumer = mkdtempSync(resolve(tmpdir(), "polici-packed-consumer-"));
 try {
   execFileSync("npm", ["init", "-y"], { cwd: consumer, stdio: "ignore" });
-  execFileSync("npm", ["install", "--ignore-scripts", "--no-optional", pack.filename], {
+  execFileSync("npm", ["install", "--ignore-scripts", "--no-optional", archive], {
     cwd: consumer,
     stdio: "inherit",
   });

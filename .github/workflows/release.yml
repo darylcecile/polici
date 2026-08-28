@@ -27,7 +27,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: mkdir release
-      - run: pnpm pack --pack-destination release
+      - run: pnpm run pack:root release
       - run: pnpm --dir editors/vscode install --frozen-lockfile
       - run: pnpm --dir editors/vscode run package
       - run: node --experimental-strip-types --no-warnings scripts/inspect-vsix.ts

@@ -89,6 +89,7 @@
     "test:runtime": "node --experimental-strip-types --no-warnings scripts/prepare-wasm-fixture.ts && tsx --test tests/issue-1-runtime.acceptance.test.ts",
     "test:assets": "node --experimental-strip-types --no-warnings scripts/validate-assets.ts",
     "test:package": "node --experimental-strip-types --no-warnings scripts/test-package.ts",
+    "pack:root": "node --experimental-strip-types --no-warnings scripts/pack-root.ts",
     "prepack": "pnpm run clean:package && pnpm run build:library",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
@@ -102,12 +103,6 @@
     "scriptc": "0.0.33",
     "tsx": "^4.20.5",
     "typescript": "^7.0.2"
-  },
-  "optionalDependencies": {
-    "@polici/polici-darwin-arm64": "1.0.0",
-    "@polici/polici-darwin-x64": "1.0.0",
-    "@polici/polici-linux-arm64": "1.0.0",
-    "@polici/polici-linux-x64": "1.0.0"
   },
   "engines": {
     "node": ">=20"
