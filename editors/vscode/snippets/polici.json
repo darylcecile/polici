@@ -1,0 +1,58 @@
+{
+  "Provider import": {
+    "prefix": "using",
+    "body": "using \"${1:github}@${2:1}\" as ${3:Git}",
+    "description": "Import a provider contract major under an alias."
+  },
+  "Policy": {
+    "prefix": "policy",
+    "body": ["policy \"${1:name}\" {", "\t$0", "}"],
+    "description": "Declare a policy."
+  },
+  "Rule": {
+    "prefix": "rule",
+    "body": ["rule \"${1:name}\" {", "\trequire ${2:true}", "}"],
+    "description": "Declare an unconditional rule."
+  },
+  "Conditional rule": {
+    "prefix": "rulewhen",
+    "body": [
+      "rule \"${1:name}\"",
+      "\twhen ${2:some schema_changes.{ true }}",
+      "{",
+      "\trequire ${3:true}",
+      "}"
+    ],
+    "description": "Declare a rule with an activation condition."
+  },
+  "Optional rule": {
+    "prefix": "ruleoptional",
+    "body": ["rule \"${1:name}\" optional {", "\trequire ${2:true}", "}"],
+    "description": "Skip the complete rule only when demanded data is missing or null."
+  },
+  "For each": {
+    "prefix": "foreach",
+    "body": ["for each ${1:item} in ${2:items} {", "\trequire ${3:true}", "}"],
+    "description": "Iterate over a collection."
+  },
+  "Every item matches": {
+    "prefix": "everymatches",
+    "body": "require every ${1:items}.{ ${2:path} matches \"${3:**/*}\" }",
+    "description": "Require every projected value to match a Polici glob."
+  },
+  "Some identity in set": {
+    "prefix": "somein",
+    "body": "require some ${1:left} in ${2:right}",
+    "description": "Require a non-empty identity/value intersection."
+  },
+  "Unique value": {
+    "prefix": "uniquein",
+    "body": "require ${1:value} unique in ${2:items}",
+    "description": "Require exactly one occurrence of a value."
+  },
+  "Passed check": {
+    "prefix": "checkpassed",
+    "body": "require ${1:Git}.check(\"${2:check-name}\") passed",
+    "description": "Require a provider check to have normalized status passed."
+  }
+}

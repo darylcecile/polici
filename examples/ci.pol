@@ -1,11 +1,12 @@
 using "github@1" as Git
 
 policy "repository rules" {
-	records = Files("records/**/*.json").as(json)
+	records = Files("fixtures/records/**/*.json").as(json)
 	changes = Git.changes("**/*")
+	schema_changes = Git.changes("schema/**")
 
 	rule "new record IDs are unique" {
-		for each record in changes.added.files("records/**/*.json").as(json) {
+		for each record in changes.added.files("fixtures/records/**/*.json").as(json) {
 			require record.id unique in records.{ id }
 		}
 	}
@@ -14,8 +15,10 @@ policy "repository rules" {
 		require every changes.{ path matches "**/*.md" }
 	}
 
-	rule "schema changes need platform approval" when some changes.{ path matches "schema/**" }  {
+	// Git.changes matches both the old and new path of a rename.
+	rule "schema changes need platform approval" when some schema_changes.{ true } {
 		require some Git.pull_request.approvers in Git.team("platform").members
-		require Git.check("schema-compatibility") passed
+		// GitHub Actions' immutable app database ID. Use the producer that owns this check.
+		require Git.check("schema-compatibility", "app:15368") passed
 	}
 }

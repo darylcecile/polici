@@ -1,0 +1,14 @@
+using "github@1" as Git
+
+policy "rename-aware paths" {
+	changes = Git.changes("**/*")
+	protected_renames = changes.renamed.{
+		path matches "schema/**" or previous_path matches "schema/**"
+	}
+
+	rule "protected paths need approval" when some protected_renames {
+		require some Git.pull_request.approvers in Git.team("platform").members
+		// Scope passing checks to the immutable producer app database ID.
+		require Git.check("schema-compatibility", "app:15368") passed
+	}
+}

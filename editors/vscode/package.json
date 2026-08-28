@@ -1,0 +1,129 @@
+{
+  "name": "polici-language",
+  "displayName": "Polici Language",
+  "version": "1.0.0",
+  "description": "Language Server Protocol support, syntax highlighting, and snippets for Polici policy files.",
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "ci",
+    "compliance",
+    "polici",
+    "policy"
+  ],
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/darylcecile/polici.git",
+    "directory": "editors/vscode"
+  },
+  "publisher": "polici",
+  "main": "./dist/extension.js",
+  "scripts": {
+    "vscode:prepublish": "pnpm run bundle",
+    "bundle": "node bundle.mjs",
+    "compile": "pnpm run bundle",
+    "check": "tsc -p . --noEmit && pnpm run bundle",
+    "package": "vsce package --no-dependencies --out polici-language.vsix"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "3.6.2",
+    "esbuild": "0.25.10",
+    "typescript": "^5.9.3"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "polici",
+        "aliases": [
+          "Polici",
+          "polici"
+        ],
+        "extensions": [
+          ".pol"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "polici",
+        "scopeName": "source.polici",
+        "path": "./syntaxes/polici.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "polici",
+        "path": "./snippets/polici.json"
+      }
+    ],
+    "configuration": {
+      "title": "Polici",
+      "properties": {
+        "polici.binary": {
+          "type": "string",
+          "default": "polici",
+          "description": "Path to the Polici executable."
+        },
+        "polici.args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "lsp",
+            "--stdio"
+          ],
+          "description": "Arguments used to start the Polici language server."
+        },
+        "polici.lockFile": {
+          "type": "string",
+          "default": "",
+          "description": "Optional workspace-relative or absolute plugin lockfile path. Empty uses nearest polici.lock discovery."
+        },
+        "polici.manifestCache": {
+          "type": [
+            "string",
+            "array"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".polici/manifests",
+            ".polici/cache/manifests"
+          ],
+          "description": "Offline static manifest cache directories."
+        },
+        "polici.manifests": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "description": "Explicit static manifest paths keyed by provider@major, source locator, or provider name."
+        },
+        "polici.maxManifestBytes": {
+          "type": "number",
+          "minimum": 1,
+          "default": 4194304,
+          "description": "Maximum bytes read from a lockfile or static manifest."
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onLanguage:polici"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  }
+}

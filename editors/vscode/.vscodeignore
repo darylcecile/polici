@@ -1,0 +1,7 @@
+**/*
+!dist/extension.js
+!language-configuration.json
+!snippets/polici.json
+!syntaxes/polici.tmLanguage.json
+!README.md
+!LICENSE

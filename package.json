@@ -1,24 +1,110 @@
 {
-	"name": "polici",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"lint": "oxlint",
-		"lint:fix": "oxlint --fix",
-		"fmt": "oxfmt",
-		"fmt:check": "oxfmt --check"
-	},
-	"keywords": [],
-	"author": "Daryl Cecile <darylcecile@github.com>",
-	"license": "ISC",
-	"packageManager": "pnpm@10.32.1",
-	"devDependencies": {
-		"oxfmt": "^0.64.0",
-		"oxlint": "^1.79.0",
-		"oxlint-tsgolint": "^7.0.2001",
-		"scriptc": "^0.0.33",
-		"typescript": "^7.0.2"
-	}
+  "name": "polici",
+  "version": "1.0.0",
+  "description": "Typed, deterministic CI policy engine with an extensible provider system",
+  "keywords": [
+    "ci",
+    "compliance",
+    "github",
+    "policy"
+  ],
+  "license": "ISC",
+  "author": "Daryl Cecile <darylcecile@github.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darylcecile/polici.git"
+  },
+  "bin": {
+    "polici": "scripts/polici.js"
+  },
+  "files": [
+    "lib/**/*.js",
+    "lib/**/*.d.ts",
+    "scripts/polici.js",
+    "schemas/*.json",
+    "examples/**/*.pol",
+    "examples/**/*.json",
+    "examples/**/*.md",
+    "examples/**/*.ts",
+    "examples/**/*.c",
+    "examples/**/*.wasm",
+    "examples/**/*.sha256",
+    "editors/README.md",
+    "editors/vscode/README.md",
+    "editors/vscode/LICENSE",
+    "editors/vscode/package.json",
+    "editors/vscode/language-configuration.json",
+    "editors/vscode/snippets/*.json",
+    "editors/vscode/syntaxes/*.json",
+    "docs/*.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "lib/src/index.js",
+  "types": "lib/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/src/index.d.ts",
+      "import": "./lib/src/index.js"
+    },
+    "./core": {
+      "types": "./lib/src/core/index.d.ts",
+      "import": "./lib/src/core/index.js"
+    },
+    "./language": {
+      "types": "./lib/src/language/index.d.ts",
+      "import": "./lib/src/language/index.js"
+    },
+    "./plugin": {
+      "types": "./lib/src/plugin/index.d.ts",
+      "import": "./lib/src/plugin/index.js"
+    },
+    "./plugin-sdk": {
+      "types": "./lib/src/sdk/index.d.ts",
+      "import": "./lib/src/sdk/index.js"
+    },
+    "./github": {
+      "types": "./lib/providers/github/index.d.ts",
+      "import": "./lib/providers/github/index.js"
+    },
+    "./schemas/plugin-lock.json": "./schemas/plugin-lock.schema.json",
+    "./schemas/plugin-manifest.json": "./schemas/plugin-manifest.schema.json",
+    "./schemas/policy-report.json": "./schemas/policy-report.schema.json",
+    "./schemas/runtime-protocol.json": "./schemas/runtime-protocol.schema.json",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "clean:package": "node --experimental-strip-types --no-warnings scripts/clean-package.ts",
+    "prepare:native": "node --experimental-strip-types --no-warnings src/cli/prepare-native.ts",
+    "build:library": "tsc -p tsconfig.build.json",
+    "build:native": "pnpm run prepare:native && scriptc build src/cli/main.ts --dynamic --no-keep-c -o dist/polici",
+    "build:native-packages": "pnpm run prepare:native && node --experimental-strip-types --no-warnings scripts/build-native-packages.ts",
+    "build:wasm-fixture": "node --experimental-strip-types --no-warnings scripts/build-wasm-fixture.ts",
+    "build": "pnpm run build:library && pnpm run build:native",
+    "coverage:native": "pnpm run prepare:native && scriptc coverage src/cli/main.ts --dynamic",
+    "test": "tsx --test src/language/language.test.ts src/engine/engine.test.ts src/plugin/plugin.test.ts src/cli/cli.test.ts src/lsp/lsp.test.ts providers/github/github.test.ts tests/issue-1-cli.acceptance.test.ts tests/issue-1-engine.acceptance.test.ts tests/issue-1-github.acceptance.test.ts tests/issue-1-lsp.acceptance.test.ts scripts/native-lsp.acceptance.test.ts scripts/cli-runtime.acceptance.test.ts",
+    "typecheck": "tsc --noEmit --allowImportingTsExtensions --module nodenext --moduleResolution nodenext --target es2024 --skipLibCheck src/plugin/node-shims.d.ts src/cli/node-shims.d.ts src/index.ts src/cli/main.ts providers/github/index.ts",
+    "test:runtime": "node --experimental-strip-types --no-warnings scripts/prepare-wasm-fixture.ts && tsx --test tests/issue-1-runtime.acceptance.test.ts",
+    "test:assets": "node --experimental-strip-types --no-warnings scripts/validate-assets.ts",
+    "test:package": "node --experimental-strip-types --no-warnings scripts/test-package.ts",
+    "prepack": "pnpm run clean:package && pnpm run build:library",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.64.0",
+    "oxlint": "^1.79.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "scriptc": "0.0.33",
+    "tsx": "^4.20.5",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.32.1"
 }

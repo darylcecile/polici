@@ -1,0 +1,432 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polici.dev/schemas/plugin-manifest-v2.schema.json",
+  "title": "Polici Plugin Manifest v2",
+  "description": "Static provider contract consumed without executing provider code. Runtime validation additionally rejects non-finite in-memory numbers and enforces semantic relationships between fields.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "schemaVersion",
+    "name",
+    "version",
+    "policiApi",
+    "contractMajor",
+    "types",
+    "exports",
+    "permissions",
+    "runtime"
+  ],
+  "properties": {
+    "schema": { "const": "polici.plugin/v2" },
+    "schemaVersion": { "const": 2 },
+    "name": { "$ref": "#/$defs/pluginName" },
+    "version": { "$ref": "#/$defs/semver" },
+    "policiApi": { "const": 1 },
+    "contractMajor": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "types": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": { "$ref": "#/$defs/namedType" }
+    },
+    "exports": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": { "$ref": "#/$defs/export" }
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/capability" }
+    },
+    "runtime": { "$ref": "#/$defs/runtime" },
+    "documentation": { "$ref": "#/$defs/documentation" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "pluginName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$"
+    },
+    "capability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?::[a-z][a-z0-9-]*)+$"
+    },
+    "resolver": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+    },
+    "documentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "stringType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "string" },
+        "enum": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "pattern": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Anchored linear pattern subset: literals, dot, character classes/ranges/negation, escapes, and single-character ?, *, or + quantifiers. Grouping, alternation, counted repetition, backreferences, and lookarounds are forbidden.",
+          "pattern": "^\\^.*\\$$"
+        },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "integerType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "integer" },
+        "minimum": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "booleanType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "boolean" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "globType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "glob" },
+        "default": { "type": "string" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "idType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "namespace"],
+      "properties": {
+        "kind": { "const": "id" },
+        "namespace": { "$ref": "#/$defs/capability" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "refType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "type"],
+      "properties": {
+        "kind": { "const": "ref" },
+        "type": { "$ref": "#/$defs/identifier" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "coreType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "type"],
+      "properties": {
+        "kind": { "const": "core" },
+        "type": { "enum": ["File", "Change", "ChangeSet", "Check"] },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "listType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "items"],
+      "properties": {
+        "kind": { "const": "list" },
+        "items": { "$ref": "#/$defs/typeExpression" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "setType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "items"],
+      "properties": {
+        "kind": { "const": "set" },
+        "items": { "$ref": "#/$defs/typeExpression" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "lazySetType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "items", "resolve"],
+      "properties": {
+        "kind": { "const": "set" },
+        "items": { "$ref": "#/$defs/typeExpression" },
+        "resolve": { "$ref": "#/$defs/resolver" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "optionalType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "const": "optional" },
+        "value": { "$ref": "#/$defs/typeExpression" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "objectType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "fields"],
+      "properties": {
+        "kind": { "const": "object" },
+        "fields": { "$ref": "#/$defs/fields" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "typeExpression": {
+      "oneOf": [
+        { "$ref": "#/$defs/stringType" },
+        { "$ref": "#/$defs/integerType" },
+        { "$ref": "#/$defs/booleanType" },
+        { "$ref": "#/$defs/globType" },
+        { "$ref": "#/$defs/idType" },
+        { "$ref": "#/$defs/refType" },
+        { "$ref": "#/$defs/coreType" },
+        { "$ref": "#/$defs/listType" },
+        { "$ref": "#/$defs/setType" },
+        { "$ref": "#/$defs/optionalType" },
+        { "$ref": "#/$defs/objectType" }
+      ]
+    },
+    "fields": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": { "$ref": "#/$defs/typeExpression" }
+    },
+    "entityFields": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": {
+        "oneOf": [{ "$ref": "#/$defs/typeExpression" }, { "$ref": "#/$defs/lazySetType" }]
+      }
+    },
+    "entityType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identity", "fields"],
+      "properties": {
+        "kind": { "const": "entity" },
+        "identity": { "$ref": "#/$defs/identifier" },
+        "fields": { "$ref": "#/$defs/entityFields" },
+        "methods": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/identifier" },
+          "additionalProperties": { "$ref": "#/$defs/method" }
+        },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "valueType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "fields"],
+      "properties": {
+        "kind": { "const": "value" },
+        "fields": { "$ref": "#/$defs/fields" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "namedType": {
+      "oneOf": [{ "$ref": "#/$defs/entityType" }, { "$ref": "#/$defs/valueType" }]
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "type": { "$ref": "#/$defs/typeExpression" },
+        "optional": { "type": "boolean" },
+        "default": { "$ref": "#/$defs/jsonValue" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parameters", "returns", "resolve"],
+      "properties": {
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } },
+        "returns": { "$ref": "#/$defs/typeExpression" },
+        "resolve": { "$ref": "#/$defs/resolver" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "resourceExport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "type", "resolve"],
+      "properties": {
+        "kind": { "const": "resource" },
+        "type": { "$ref": "#/$defs/typeExpression" },
+        "context": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+        "resolve": { "$ref": "#/$defs/resolver" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "functionExport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameters", "returns", "resolve"],
+      "properties": {
+        "kind": { "const": "function" },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } },
+        "returns": { "$ref": "#/$defs/typeExpression" },
+        "resolve": { "$ref": "#/$defs/resolver" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "deprecated": { "type": "string" },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "export": {
+      "oneOf": [{ "$ref": "#/$defs/resourceExport" }, { "$ref": "#/$defs/functionExport" }]
+    },
+    "jsonValue": {
+      "anyOf": [
+        { "type": "null" },
+        { "type": "boolean" },
+        { "type": "number" },
+        { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/$defs/jsonValue" } },
+        {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/jsonValue" }
+        }
+      ]
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "protocol", "entrypoint", "transport", "capabilities"],
+      "properties": {
+        "kind": { "enum": ["typescript", "wasm"] },
+        "protocol": { "const": 1 },
+        "entrypoint": {
+          "type": "string",
+          "pattern": "^\\./(?!(?:\\.|\\.\\.)(?:/|$))(?!.*(?:/)(?:\\.|\\.\\.)(?:/|$))(?!.*//)[^\\u0000\\\\/]+(?:/[^\\u0000\\\\/]+)*$"
+        },
+        "transport": { "enum": ["jsonl", "length-prefixed"] },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/capability" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "wasm" } }, "required": ["kind"] },
+          "then": { "properties": { "entrypoint": { "type": "string", "pattern": "\\.wasm$" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "typescript" } }, "required": ["kind"] },
+          "then": {
+            "properties": {
+              "entrypoint": {
+                "type": "string",
+                "not": {
+                  "type": "string",
+                  "pattern": "\\.(?:[cCmM]?[tT][sS]|[tT][sS][xX]|[cCmM]?[jJ][sS])$"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

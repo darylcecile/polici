@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polici.dev/schemas/runtime-protocol-v1.schema.json",
+  "title": "Polici Runtime Protocol v1",
+  "description": "One language-neutral host or runtime message. Framing, continuation freshness, lifecycle-dependent continuation requirements, ordering, quotas, and manifest conformance are enforced by the host.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/initialize" },
+    { "$ref": "#/$defs/call" },
+    { "$ref": "#/$defs/shutdown" },
+    { "$ref": "#/$defs/capabilityResult" },
+    { "$ref": "#/$defs/initialized" },
+    { "$ref": "#/$defs/result" },
+    { "$ref": "#/$defs/errorResponse" },
+    { "$ref": "#/$defs/capabilityCall" },
+    { "$ref": "#/$defs/stopped" }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+    },
+    "capabilityName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?::[a-z][a-z0-9-]*)+$"
+    },
+    "continuation": {
+      "type": "string",
+      "maxLength": 16384,
+      "pattern": "^[A-Za-z0-9._~+/=-]+$"
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "version": { "type": "string" }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "operations"],
+      "properties": {
+        "name": { "$ref": "#/$defs/capabilityName" },
+        "operations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/name" }
+        },
+        "description": { "type": "string" },
+        "scope": { "$ref": "#/$defs/wire" },
+        "maxCalls": { "$ref": "#/$defs/positiveInteger" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxFrameBytes",
+        "maxMessageBytes",
+        "maxOutputBytes",
+        "maxLogBytes",
+        "maxContinuationBytes",
+        "maxCapabilityCalls"
+      ],
+      "properties": {
+        "maxFrameBytes": { "$ref": "#/$defs/positiveInteger" },
+        "maxMessageBytes": { "$ref": "#/$defs/positiveInteger" },
+        "maxOutputBytes": { "$ref": "#/$defs/positiveInteger" },
+        "maxLogBytes": { "$ref": "#/$defs/positiveInteger" },
+        "maxContinuationBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "maxCapabilityCalls": { "$ref": "#/$defs/positiveInteger" }
+      }
+    },
+    "wireMap": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/wire" }
+    },
+    "wire": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag"],
+          "properties": { "tag": { "const": "null" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag"],
+          "properties": { "tag": { "const": "missing" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "value"],
+          "properties": {
+            "tag": { "const": "boolean" },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "value"],
+          "properties": {
+            "tag": { "const": "string" },
+            "value": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "value"],
+          "properties": {
+            "tag": { "const": "number" },
+            "value": { "type": "number" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "value"],
+          "properties": {
+            "tag": { "const": "integer" },
+            "value": { "type": "string", "pattern": "^(?:0|-?[1-9][0-9]*)$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "encoding", "value"],
+          "properties": {
+            "tag": { "const": "bytes" },
+            "encoding": { "const": "base64" },
+            "value": {
+              "type": "string",
+              "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "namespace", "value"],
+          "properties": {
+            "tag": { "const": "id" },
+            "namespace": { "$ref": "#/$defs/capabilityName" },
+            "value": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "items"],
+          "properties": {
+            "tag": { "const": "list" },
+            "items": { "type": "array", "items": { "$ref": "#/$defs/wire" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "items"],
+          "properties": {
+            "tag": { "const": "set" },
+            "items": { "type": "array", "items": { "$ref": "#/$defs/wire" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "entries"],
+          "properties": {
+            "tag": { "const": "map" },
+            "entries": { "$ref": "#/$defs/wireMap" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tag", "type", "identity", "fields"],
+          "properties": {
+            "tag": { "const": "entity" },
+            "type": {
+              "type": "string",
+              "pattern": "^(?:[a-z][a-z0-9-]*:)?[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["namespace", "value"],
+              "properties": {
+                "namespace": { "$ref": "#/$defs/capabilityName" },
+                "value": { "type": "string" }
+              }
+            },
+            "fields": { "$ref": "#/$defs/wireMap" }
+          }
+        }
+      ]
+    },
+    "runtimeError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "kind", "message", "retryable"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+        "kind": {
+          "enum": [
+            "resolver",
+            "permission",
+            "capability",
+            "invalid-request",
+            "unavailable",
+            "timeout",
+            "cancelled",
+            "internal"
+          ]
+        },
+        "message": { "type": "string" },
+        "retryable": { "type": "boolean" },
+        "details": { "$ref": "#/$defs/wire" }
+      }
+    },
+    "initialize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "type", "id", "host", "plugin", "capabilities", "limits"],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "initialize" },
+        "id": { "$ref": "#/$defs/id" },
+        "host": { "$ref": "#/$defs/implementation" },
+        "plugin": { "$ref": "#/$defs/implementation" },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/capability" }
+        },
+        "limits": { "$ref": "#/$defs/limits" }
+      }
+    },
+    "call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "type",
+        "id",
+        "resolver",
+        "arguments",
+        "continuation",
+        "deadlineUnixMs"
+      ],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "call" },
+        "id": { "$ref": "#/$defs/id" },
+        "resolver": { "$ref": "#/$defs/name" },
+        "arguments": { "$ref": "#/$defs/wireMap" },
+        "subject": { "$ref": "#/$defs/wire" },
+        "continuation": { "$ref": "#/$defs/continuation" },
+        "deadlineUnixMs": { "$ref": "#/$defs/positiveInteger" }
+      }
+    },
+    "shutdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "type", "id", "continuation"],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "shutdown" },
+        "id": { "$ref": "#/$defs/id" },
+        "continuation": { "$ref": "#/$defs/continuation" }
+      }
+    },
+    "capabilityResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "type", "id", "requestId", "sequence", "continuation"],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "capability-result" },
+        "id": { "$ref": "#/$defs/id" },
+        "requestId": { "$ref": "#/$defs/id" },
+        "sequence": { "$ref": "#/$defs/positiveInteger" },
+        "continuation": { "$ref": "#/$defs/continuation" },
+        "result": { "$ref": "#/$defs/wire" },
+        "error": { "$ref": "#/$defs/runtimeError" }
+      },
+      "oneOf": [
+        { "required": ["result"], "not": { "required": ["error"] } },
+        { "required": ["error"], "not": { "required": ["result"] } }
+      ]
+    },
+    "initialized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "type", "id", "implementation", "capabilities", "continuation"],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "initialized" },
+        "id": { "$ref": "#/$defs/id" },
+        "implementation": { "$ref": "#/$defs/implementation" },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/capabilityName" }
+        },
+        "continuation": { "$ref": "#/$defs/continuation" }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "type", "id", "value", "continuation"],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "result" },
+        "id": { "$ref": "#/$defs/id" },
+        "value": { "$ref": "#/$defs/wire" },
+        "continuation": { "$ref": "#/$defs/continuation" }
+      }
+    },
+    "errorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "type", "id", "error"],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "error" },
+        "id": { "$ref": "#/$defs/id" },
+        "error": { "$ref": "#/$defs/runtimeError" },
+        "continuation": { "$ref": "#/$defs/continuation" }
+      }
+    },
+    "capabilityCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "type",
+        "id",
+        "requestId",
+        "sequence",
+        "capability",
+        "operation",
+        "arguments",
+        "continuation"
+      ],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "capability-call" },
+        "id": { "$ref": "#/$defs/id" },
+        "requestId": { "$ref": "#/$defs/id" },
+        "sequence": { "$ref": "#/$defs/positiveInteger" },
+        "capability": { "$ref": "#/$defs/capabilityName" },
+        "operation": { "$ref": "#/$defs/name" },
+        "arguments": { "$ref": "#/$defs/wireMap" },
+        "continuation": { "$ref": "#/$defs/continuation" },
+        "deadlineUnixMs": { "$ref": "#/$defs/positiveInteger" }
+      }
+    },
+    "stopped": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "type", "id"],
+      "properties": {
+        "protocol": { "const": "polici.runtime/v1" },
+        "type": { "const": "stopped" },
+        "id": { "$ref": "#/$defs/id" }
+      }
+    }
+  }
+}

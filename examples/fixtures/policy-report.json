@@ -1,0 +1,58 @@
+{
+  "diagnostics": [],
+  "exitCode": 1,
+  "kind": "policy-evaluation",
+  "policies": [
+    {
+      "exitCode": 1,
+      "name": "repository rules",
+      "rules": [
+        {
+          "evidence": [
+            {
+              "kind": "offending-item",
+              "message": "\"src/index.ts\" does not match \"**/*.md\".",
+              "source": { "path": "src/index.ts" },
+              "value": "src/index.ts"
+            }
+          ],
+          "message": "One or more requirements failed.",
+          "name": "Markdown only",
+          "requirements": [
+            {
+              "evidence": [
+                {
+                  "kind": "offending-item",
+                  "message": "\"src/index.ts\" does not match \"**/*.md\".",
+                  "source": { "path": "src/index.ts" },
+                  "value": "src/index.ts"
+                }
+              ],
+              "expressionSpan": {
+                "end": { "column": 57, "line": 1, "offset": 87 },
+                "start": { "column": 32, "line": 1, "offset": 62 }
+              },
+              "message": "Required expression evaluated to false.",
+              "span": {
+                "end": { "column": 57, "line": 1, "offset": 87 },
+                "start": { "column": 24, "line": 1, "offset": 54 }
+              },
+              "status": "failed"
+            }
+          ],
+          "span": {
+            "end": { "column": 59, "line": 1, "offset": 89 },
+            "start": { "column": 2, "line": 1, "offset": 32 }
+          },
+          "status": "failed"
+        }
+      ],
+      "span": {
+        "end": { "column": 1, "line": 2, "offset": 91 },
+        "start": { "column": 0, "line": 0, "offset": 0 }
+      },
+      "status": "failed"
+    }
+  ],
+  "status": "failed"
+}

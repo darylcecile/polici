@@ -1,1 +1,9 @@
 node_modules/
+dist/
+lib/
+src/cli/node_modules/
+.scriptc/
+*.tgz
+.pack/
+editors/vscode/*.vsix
+examples/runtime/wasm/*.ll

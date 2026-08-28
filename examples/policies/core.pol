@@ -1,0 +1,9 @@
+policy "record fixtures" {
+	records = Files("fixtures/records/**/*.json").as(json)
+
+	rule "record IDs are unique" {
+		for each record in records {
+			require record.id unique in records.{ id }
+		}
+	}
+}

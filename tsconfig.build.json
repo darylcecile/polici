@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": ".",
+    "outDir": "lib",
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "strict": true,
+    "skipLibCheck": true,
+    "rewriteRelativeImportExtensions": true
+  },
+  "files": [
+    "src/plugin/node-shims.d.ts",
+    "src/index.ts",
+    "src/core/index.ts",
+    "src/language/index.ts",
+    "src/plugin/index.ts",
+    "src/sdk/index.ts",
+    "providers/github/index.ts"
+  ]
+}

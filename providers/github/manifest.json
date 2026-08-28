@@ -1,0 +1,106 @@
+{
+  "contractMajor": 1,
+  "documentation": {
+    "description": "Host-side GitHub provider. Authentication remains in the Polici host and is never shared with external plugins.",
+    "summary": "GitHub pull request, change, team, review, and check data."
+  },
+  "exports": {
+    "changes": {
+      "kind": "function",
+      "parameters": [{ "default": "**/*", "name": "pattern", "type": { "kind": "glob" } }],
+      "resolve": "changes",
+      "returns": { "kind": "core", "type": "ChangeSet" }
+    },
+    "check": {
+      "kind": "function",
+      "parameters": [
+        { "name": "name", "type": { "kind": "string" } },
+        {
+          "description": "Immutable producer selector (app:<id> or status:<creator-node-id>). Unscoped checks are diagnostic-only and never pass.",
+          "name": "producer",
+          "optional": true,
+          "type": { "kind": "string" }
+        }
+      ],
+      "resolve": "check",
+      "returns": { "kind": "core", "type": "Check" }
+    },
+    "pull_request": {
+      "context": "pull-request",
+      "kind": "resource",
+      "resolve": "pullRequest",
+      "type": { "kind": "ref", "type": "PullRequest" }
+    },
+    "team": {
+      "kind": "function",
+      "parameters": [{ "name": "slug", "type": { "kind": "string" } }],
+      "resolve": "team",
+      "returns": { "kind": "ref", "type": "Team" }
+    }
+  },
+  "name": "github",
+  "permissions": [
+    "github:checks:read",
+    "github:organization-members:read",
+    "github:pull-requests:read"
+  ],
+  "policiApi": 1,
+  "runtime": {
+    "capabilities": [
+      "github:checks:read",
+      "github:organization-members:read",
+      "github:pull-requests:read"
+    ],
+    "entrypoint": "./builtin/github",
+    "kind": "typescript",
+    "protocol": 1,
+    "transport": "length-prefixed"
+  },
+  "schema": "polici.plugin/v2",
+  "schemaVersion": 2,
+  "types": {
+    "PullRequest": {
+      "fields": {
+        "approvers": {
+          "items": { "kind": "ref", "type": "User" },
+          "kind": "set",
+          "resolve": "pullRequest.approvers"
+        },
+        "author": { "kind": "ref", "type": "User" },
+        "base_sha": { "kind": "string" },
+        "changed_files": { "kind": "integer", "minimum": 0 },
+        "draft": { "kind": "boolean" },
+        "head_sha": { "kind": "string" },
+        "id": { "kind": "id", "namespace": "github:pull-request" },
+        "number": { "kind": "integer", "minimum": 1 },
+        "state": { "enum": ["open", "closed"], "kind": "string" }
+      },
+      "identity": "id",
+      "kind": "entity"
+    },
+    "Team": {
+      "fields": {
+        "id": { "kind": "id", "namespace": "github:team" },
+        "members": {
+          "items": { "kind": "ref", "type": "User" },
+          "kind": "set",
+          "resolve": "team.members"
+        },
+        "name": { "kind": "string" },
+        "organization": { "kind": "string" },
+        "slug": { "kind": "string" }
+      },
+      "identity": "id",
+      "kind": "entity"
+    },
+    "User": {
+      "fields": {
+        "id": { "kind": "id", "namespace": "github:user" },
+        "login": { "kind": "string" }
+      },
+      "identity": "id",
+      "kind": "entity"
+    }
+  },
+  "version": "1.0.0"
+}

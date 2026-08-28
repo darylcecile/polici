@@ -1,0 +1,140 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Polici",
+  "scopeName": "source.polici",
+  "fileTypes": ["pol"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#using" },
+    { "include": "#declarations" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#constants" },
+    { "include": "#keywords" },
+    { "include": "#operators" },
+    { "include": "#calls" },
+    { "include": "#members" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.polici",
+          "begin": "//",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.polici" } },
+          "end": "$"
+        },
+        {
+          "name": "comment.block.polici",
+          "begin": "/\\*",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.begin.polici" } },
+          "end": "\\*/",
+          "endCaptures": { "0": { "name": "punctuation.definition.comment.end.polici" } }
+        }
+      ]
+    },
+    "using": {
+      "patterns": [
+        {
+          "match": "\\b(using)\\s+(\"(?:\\\\(?:[\"\\\\/bfnrt]|u[0-9A-Fa-f]{4})|[^\"\\\\\\r\\n])*\")\\s+(as)\\s+([_\\p{L}][\\p{L}\\p{N}_]*)",
+          "captures": {
+            "1": { "name": "keyword.control.import.polici" },
+            "2": { "name": "string.quoted.double.polici" },
+            "3": { "name": "keyword.control.import.polici" },
+            "4": { "name": "entity.name.namespace.polici" }
+          }
+        }
+      ]
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "match": "\\b(policy|rule)\\s+(\"(?:\\\\(?:[\"\\\\/bfnrt]|u[0-9A-Fa-f]{4})|[^\"\\\\\\r\\n])*\")",
+          "captures": {
+            "1": { "name": "keyword.declaration.polici" },
+            "2": { "name": "entity.name.type.polici string.quoted.double.polici" }
+          }
+        },
+        {
+          "match": "\\b(for)\\s+(each)\\s+([_\\p{L}][\\p{L}\\p{N}_]*)",
+          "captures": {
+            "1": { "name": "keyword.control.loop.polici" },
+            "2": { "name": "keyword.control.loop.polici" },
+            "3": { "name": "variable.parameter.polici" }
+          }
+        },
+        {
+          "match": "\\b([_\\p{L}][\\p{L}\\p{N}_]*)\\s*(?==(?!=))",
+          "captures": { "1": { "name": "variable.other.constant.polici" } }
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.polici",
+      "begin": "\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.polici" } },
+      "end": "\"|$",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.polici" } },
+      "patterns": [
+        {
+          "name": "constant.character.escape.polici",
+          "match": "\\\\(?:[\"\\\\/bfnrt]|u[0-9A-Fa-f]{4})"
+        },
+        { "name": "invalid.illegal.escape.polici", "match": "\\\\." }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.polici",
+      "match": "(?<![\\p{L}\\p{N}_])-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?(?![\\p{L}\\p{N}_])"
+    },
+    "constants": {
+      "patterns": [
+        { "name": "constant.language.boolean.polici", "match": "\\b(?:true|false)\\b" },
+        { "name": "constant.language.null.polici", "match": "\\bnull\\b" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.polici",
+          "match": "\\b(?:using|as|policy|rule|optional)\\b"
+        },
+        {
+          "name": "keyword.control.conditional.polici",
+          "match": "\\b(?:when|require)\\b"
+        },
+        {
+          "name": "keyword.control.loop.polici",
+          "match": "\\b(?:for|each)\\b"
+        },
+        {
+          "name": "keyword.operator.word.polici",
+          "match": "\\b(?:in|some|every|no|unique|matches|passed|and|or|not)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "name": "keyword.operator.polici",
+      "match": "==|!=|="
+    },
+    "calls": {
+      "name": "entity.name.function.polici",
+      "match": "\\b[_\\p{L}][\\p{L}\\p{N}_]*(?=\\s*\\()"
+    },
+    "members": {
+      "name": "variable.other.property.polici",
+      "match": "(?<=\\.)[_\\p{L}][\\p{L}\\p{N}_]*"
+    },
+    "punctuation": {
+      "patterns": [
+        { "name": "punctuation.section.block.begin.polici", "match": "\\{" },
+        { "name": "punctuation.section.block.end.polici", "match": "\\}" },
+        { "name": "punctuation.section.parens.begin.polici", "match": "\\(" },
+        { "name": "punctuation.section.parens.end.polici", "match": "\\)" },
+        { "name": "punctuation.accessor.polici", "match": "\\." },
+        { "name": "punctuation.separator.polici", "match": "[,;]" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+policy "optional metadata" {
+	metadata = Files("fixtures/records/*.json").as(json)
+
+	rule "owner format" optional {
+		// The fixture records omit owner, so missing data skips this rule.
+		require every metadata.{ owner matches "@*" }
+	}
+}

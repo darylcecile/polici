@@ -1,0 +1,11 @@
+{
+  "arguments": {
+    "login": { "tag": "string", "value": "octocat" }
+  },
+  "continuation": "opaque-session-state-1",
+  "deadlineUnixMs": 1787836800000,
+  "id": "call-1",
+  "protocol": "polici.runtime/v1",
+  "resolver": "user",
+  "type": "call"
+}

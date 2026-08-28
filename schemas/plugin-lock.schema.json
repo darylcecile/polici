@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polici.dev/schemas/plugin-lock-v2.schema.json",
+  "title": "Polici Plugin Lockfile v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "schemaVersion", "plugins"],
+  "properties": {
+    "schema": { "const": "polici.lock/v2" },
+    "schemaVersion": { "const": 2 },
+    "plugins": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/plugin" }
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?::[a-z][a-z0-9-]*)+$"
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "value": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "locator"],
+      "properties": {
+        "kind": { "enum": ["registry", "url", "path", "builtin"] },
+        "locator": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "protocol", "entrypoint", "transport", "capabilities"],
+      "properties": {
+        "kind": { "enum": ["typescript", "wasm"] },
+        "protocol": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "entrypoint": {
+          "type": "string",
+          "pattern": "^\\./(?!(?:\\.|\\.\\.)(?:/|$))(?!.*(?:/)(?:\\.|\\.\\.)(?:/|$))(?!.*//)[^\\u0000\\\\/]+(?:/[^\\u0000\\\\/]+)*$"
+        },
+        "transport": { "enum": ["jsonl", "length-prefixed"] },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/capability" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "wasm" } }, "required": ["kind"] },
+          "then": { "properties": { "entrypoint": { "type": "string", "pattern": "\\.wasm$" } } }
+        }
+      ]
+    },
+    "plugin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "contractMajor", "source", "manifest", "artifact", "runtime"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$"
+        },
+        "contractMajor": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "source": { "$ref": "#/$defs/source" },
+        "manifest": { "$ref": "#/$defs/digest" },
+        "artifact": { "$ref": "#/$defs/digest" },
+        "runtime": { "$ref": "#/$defs/runtime" }
+      }
+    }
+  }
+}
