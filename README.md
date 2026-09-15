@@ -4,6 +4,8 @@ Polici is a typed policy engine for repositories and pull requests. It lets you 
 
 Policies produce structured diagnostics and evidence, so a failed check explains which rule failed and which files, values, users, or checks caused it.
 
+Currently PoC
+
 ## Install
 
 Install the CLI globally:
